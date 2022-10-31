@@ -1,0 +1,14 @@
+psutil
+ray
+cvxpy
+cvxpylayers
+networkx
+tqdm
+numpy
+torch
+torchvision
+scikit-learn
+wandb
+pytest
+pytest-xdist
+pytest-forked
