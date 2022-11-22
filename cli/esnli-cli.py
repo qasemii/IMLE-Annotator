@@ -11,6 +11,9 @@ import argparse
 
 import torch
 
+import nltk
+from nltk.tokenize import word_tokenize
+
 from torch import optim, Tensor
 from torch.utils.data import TensorDataset
 from torch.utils.data import DataLoader
@@ -27,6 +30,8 @@ from sklearn.model_selection import train_test_split
 from l2x.torch.utils import set_seed, subset_precision
 from l2x.torch.modules import Model, ConcreteDistribution, SampleSubset, IMLETopK
 from l2x.utils import pad_sequences
+
+from snippets.explore_data import get_data
 
 from typing import Optional, Callable
 
@@ -69,79 +74,91 @@ def evaluate(model_eval: Model,
     return mse_value.item()
 
 
-def main(argv):
-    parser = argparse.ArgumentParser('PyTorch I-MLE/BeerAdvocate', formatter_class=argparse.ArgumentDefaultsHelpFormatter)
-
-    parser.add_argument('--aspect', '-a', action='store', type=int, default=1, help='Aspect')
-    parser.add_argument('--epochs', '-e', action='store', type=int, default=20, help='Epochs')
-    parser.add_argument('--batch-size', '-b', action='store', type=int, default=40, help='Batch Size')
-    parser.add_argument('--kernel-size', '-k', action='store', type=int, default=3, help='Kernel Size')
-    parser.add_argument('--hidden-dims', '-H', action='store', type=int, default=250, help='Hidden Dimensions')
-    parser.add_argument('--max-len', '-m', action='store', type=int, default=350, help='Maximum Sequence Length')
-    parser.add_argument('--select-k', '-K', action='store', type=int, default=10, help='Select K')
-
-    parser.add_argument("--checkpoint", "-c", action='store', type=str, default='models/model.pt')
-    parser.add_argument("--reruns", "-r", action='store', type=int, default=10)
-    parser.add_argument("--method", "-M", type=str, choices=['sst', 'imle', 'imletopk', 'aimle', 'ste', 'softsub'],
-                        default='imle', help="Method (SST, IMLE, AIMLE, STE, SoftSub)")
-
-    parser.add_argument('--aimle-symmetric', action='store_true', default=False)
-    parser.add_argument('--aimle-target', type=str, choices=['standard', 'adaptive'], default='standard')
-
-    parser.add_argument('--imle-noise', type=str, choices=['none', 'sog', 'gumbel'], default='sog')
-    parser.add_argument('--imle-samples', action='store', type=int, default=1)
-    parser.add_argument('--imle-input-temperature', action='store', type=float, default=0.0)
-    parser.add_argument('--imle-output-temperature', action='store', type=float, default=10.0)
-    parser.add_argument('--imle-lambda', action='store', type=float, default=1000.0)
-
-    parser.add_argument('--aimle-beta-update-step', action='store', type=float, default=0.0001)
-    parser.add_argument('--aimle-beta-update-momentum', action='store', type=float, default=0.0)
-    parser.add_argument('--aimle-target-norm', action='store', type=float, default=1.0)
-
-    parser.add_argument('--sst-temperature', action='store', type=float, default=0.1)
-
-    parser.add_argument('--softsub-temperature', action='store', type=float, default=0.5)
-
-    parser.add_argument('--ste-noise', type=str, choices=['none', 'sog', 'gumbel'], default='sog')
-    parser.add_argument('--ste-temperature', action='store', type=float, default=0.0)
-
-    parser.add_argument('--debug', '-D', action='store_true', default=False)
-    parser.add_argument('--max-iterations', action='store', type=int, default=None)
-    parser.add_argument('--gradient-scaling', action='store_true', default=False)
-
-    args = parser.parse_args(argv)
-
-    if args.debug is True:
-        torch.autograd.set_detect_anomaly(True)
-
-    hostname = socket.gethostname()
-    print(f'Hostname: {hostname}')
+def main():
+    # parser = argparse.ArgumentParser('PyTorch I-MLE/BeerAdvocate', formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+    #
+    # parser.add_argument('--aspect', '-a', action='store', type=int, default=1, help='Aspect')
+    # parser.add_argument('--epochs', '-e', action='store', type=int, default=20, help='Epochs')
+    # parser.add_argument('--batch-size', '-b', action='store', type=int, default=40, help='Batch Size')
+    # parser.add_argument('--kernel-size', '-k', action='store', type=int, default=3, help='Kernel Size')
+    # parser.add_argument('--hidden-dims', '-H', action='store', type=int, default=250, help='Hidden Dimensions')
+    # parser.add_argument('--max-len', '-m', action='store', type=int, default=350, help='Maximum Sequence Length')
+    # parser.add_argument('--select-k', '-K', action='store', type=int, default=10, help='Select K')
+    #
+    # parser.add_argument("--checkpoint", "-c", action='store', type=str, default='models/model.pt')
+    # parser.add_argument("--reruns", "-r", action='store', type=int, default=10)
+    # parser.add_argument("--method", "-M", type=str, choices=['sst', 'imle', 'imletopk', 'aimle', 'ste', 'softsub'],
+    #                     default='imle', help="Method (SST, IMLE, AIMLE, STE, SoftSub)")
+    #
+    # parser.add_argument('--aimle-symmetric', action='store_true', default=False)
+    # parser.add_argument('--aimle-target', type=str, choices=['standard', 'adaptive'], default='standard')
+    #
+    # parser.add_argument('--imle-noise', type=str, choices=['none', 'sog', 'gumbel'], default='sog')
+    # parser.add_argument('--imle-samples', action='store', type=int, default=1)
+    # parser.add_argument('--imle-input-temperature', action='store', type=float, default=0.0)
+    # parser.add_argument('--imle-output-temperature', action='store', type=float, default=10.0)
+    # parser.add_argument('--imle-lambda', action='store', type=float, default=1000.0)
+    #
+    # parser.add_argument('--aimle-beta-update-step', action='store', type=float, default=0.0001)
+    # parser.add_argument('--aimle-beta-update-momentum', action='store', type=float, default=0.0)
+    # parser.add_argument('--aimle-target-norm', action='store', type=float, default=1.0)
+    #
+    # parser.add_argument('--sst-temperature', action='store', type=float, default=0.1)
+    #
+    # parser.add_argument('--softsub-temperature', action='store', type=float, default=0.5)
+    #
+    # parser.add_argument('--ste-noise', type=str, choices=['none', 'sog', 'gumbel'], default='sog')
+    # parser.add_argument('--ste-temperature', action='store', type=float, default=0.0)
+    #
+    # parser.add_argument('--debug', '-D', action='store_true', default=False)
+    # parser.add_argument('--max-iterations', action='store', type=int, default=None)
+    # parser.add_argument('--gradient-scaling', action='store_true', default=False)
+    #
+    # args = parser.parse_args(argv)
+    #
+    # if args.debug is True:
+    #     torch.autograd.set_detect_anomaly(True)
+    #
+    # hostname = socket.gethostname()
+    # print(f'Hostname: {hostname}')
 
     device = torch.device('cpu')
     if torch.cuda.is_available():
         device = torch.device('cuda')
 
-    aspect = args.aspect
+    # aspect = args.aspect
 
-    input_path_train = "data/reviews.aspect" + str(aspect) + ".train.txt"
-    input_path_validation = "data/reviews.aspect" + str(aspect) + ".heldout.txt"
+    input_path_train = '/Users/mohammadrezaghasemimadani/Desktop/Code/imle-annotator/data/esnli_train_1.csv'
+
+    # get data dictionary
+    data = get_data(input_path_train)
+
+    # tokenize using nltk word tokenizer
+    tokenized_sentence = []
+    for i in range(len(data['sentences'])):
+        tokenized_sentence.append(word_tokenize(data['sentences'][i]))
 
     # the dictionary mapping words to their IDs
     word_to_id = dict()
     token_id_counter = 3
+    for token_list in tokenized_sentence:
+        for token in token_list:
+            if token not in word_to_id:
+                word_to_id[token] = token_id_counter
+                token_id_counter = token_id_counter + 1
 
-    with open(input_path_train) as fin:
-        for line in fin:
-            y, sep, text = line.partition("\t")
-            token_list = text.split(" ")
-            for token in token_list:
-                if token not in word_to_id:
-                    word_to_id[token] = token_id_counter
-                    token_id_counter = token_id_counter + 1
-
+    # adding special tokens to the dictionary
     word_to_id["<PAD>"] = 0
     word_to_id["<START>"] = 1
     word_to_id["<UNK>"] = 2
+
+    # get words from ids
+    id_to_word = {value: key for key, value in word_to_id.items()}
+
+    # labels
+    label_to_id = {'entailment': 2,  'neutral': 1, 'contradiction': 0}
+    id_to_label = {value: key for key, value in label_to_id.items()}
+
 
     # Set parameters:
     method_name = args.method
@@ -156,21 +173,15 @@ def main(argv):
     select_k = args.select_k  # Number of selected words by the methods
     checkpoint_path = args.checkpoint
 
-    id_to_word = {value: key for key, value in word_to_id.items()}
-
+    # prepare train set
     X_train_list = []
     Y_train_list = []
-    # now we iterate again to assign IDs
-    with open(input_path_train) as fin:
-        for line in fin:
-            y, sep, text = line.partition("\t")
-            token_list = text.split(" ")
-            tokenid_list = [word_to_id[token] for token in token_list]
-            X_train_list.append(tokenid_list)
+    # now we iterate again to assign IDs - Train
+    for token_list in tokenized_sentence:
+        tokenid_list = [word_to_id[token] for token in token_list]
+        X_train_list.append(tokenid_list)
 
-            # extract the normalized [0,1] value for the aspect
-            y = [float(v) for v in y.split()]
-            Y_train_list.append(y[aspect])
+    Y_train_list = [label_to_id[label] for label in data['labels']]
 
     X_train = pad_sequences(X_train_list, max_len=maxlen)
     Y_train = np.asarray(Y_train_list)
@@ -183,20 +194,20 @@ def main(argv):
     X_val_list = []
     Y_val_list = []
 
-    # now we iterate again to assign IDs
-    with open(input_path_validation) as fin:
-        for line in fin:
-            y, sep, text = line.partition("\t")
-            token_list = text.split(" ")
-            tokenid_list = [word_to_id.get(token, 2) for token in token_list]
-            X_val_list.append(tokenid_list)
-
-            # extract the normalized [0,1] value for the aspect
-            y = [float(v) for v in y.split()]
-            Y_val_list.append(y[aspect])
-
-    X_val_both = pad_sequences(X_val_list, max_len=maxlen)
-    Y_val_both = np.asarray(Y_val_list)
+    # # now we iterate again to assign IDs - Validation
+    # with open(input_path_validation) as fin:
+    #     for line in fin:
+    #         y, sep, text = line.partition("\t")
+    #         token_list = text.split(" ")
+    #         tokenid_list = [word_to_id.get(token, 2) for token in token_list]
+    #         X_val_list.append(tokenid_list)
+    #
+    #         # extract the normalized [0,1] value for the aspect
+    #         y = [float(v) for v in y.split()]
+    #         Y_val_list.append(y[aspect])
+    #
+    # X_val_both = pad_sequences(X_val_list, max_len=maxlen)
+    # Y_val_both = np.asarray(Y_val_list)
 
     # this cell loads the word embeddings from the external data
     embeddings_index = {}
@@ -439,5 +450,7 @@ def main(argv):
 
 
 if __name__ == '__main__':
-    logging.basicConfig(stream=sys.stdout, level=logging.INFO)
-    main(sys.argv[1:])
+    # logging.basicConfig(stream=sys.stdout, level=logging.INFO)
+    # main(sys.argv[1:])
+
+    main()
