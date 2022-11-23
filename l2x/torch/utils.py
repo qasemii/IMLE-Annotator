@@ -15,6 +15,8 @@ import math
 
 from l2x.utils import pad_sequences
 
+from snippets.explore_data import nltk_word_tokenize
+
 from typing import Optional, Tuple, Callable
 
 import logging
@@ -80,6 +82,45 @@ def subset_precision(model, aspect, id_to_word, word_to_id, select_k, device: to
                     rl = list(r)
                     if i in range(rl[0], rl[1]):
                         correct_selected_counter = correct_selected_counter + 1
+        # we make sure that we select at least 10 non-padding words
+        # if we have more than select_k non-padding words selected, we allow it but count that in
+        selected_word_counter = selected_word_counter + max(selected_nonpadding_word_counter, select_k)
+
+    return correct_selected_counter / selected_word_counter
+
+def subset_precision_esnli(model, test_data, id_to_word, word_to_id, select_k, device: torch.device, max_len: int = 350):
+    # tokenize using nltk word tokenizer
+    tokenized_sentence = nltk_word_tokenize(test_data['sentences'])
+
+    selected_word_counter = 0
+    correct_selected_counter = 0
+    for anotr in range(len(test_data['sentences'])):
+        text_list = tokenized_sentence[anotr]
+        review_length = len(text_list)
+
+        list_test = []
+        tokenid_list = [word_to_id.get(token, 0) for token in text_list]
+        list_test.append(tokenid_list)
+
+        X_test_subset = pad_sequences(list_test, max_len=max_len)
+        X_test_subset_t = torch.tensor(X_test_subset, dtype=torch.long, device=device)
+
+        with torch.inference_mode():
+            model.eval()
+            prediction = model.z(X_test_subset_t)
+
+        x_val_selected = prediction[0].cpu().numpy() * X_test_subset
+
+        # [L,]
+        selected_words = np.vectorize(id_to_word.get)(x_val_selected)[0][-review_length:]
+        selected_nonpadding_word_counter = 0
+
+        highlights = [word_to_id.get(token, 0) for token in test_data['highlights'][anotr]]
+        for i, w in enumerate(selected_words):
+            if w != '<PAD>':  # we are nice to the L2X approach by only considering selected non-pad tokens
+                selected_nonpadding_word_counter = selected_nonpadding_word_counter + 1
+                if i in highlights:
+                    correct_selected_counter = correct_selected_counter + 1
         # we make sure that we select at least 10 non-padding words
         # if we have more than select_k non-padding words selected, we allow it but count that in
         selected_word_counter = selected_word_counter + max(selected_nonpadding_word_counter, select_k)
