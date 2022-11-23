@@ -10,9 +10,6 @@ def get_data(file_dir):
     file = open(file_dir)
     rows = csv.DictReader(file)
 
-    # tokenize using nltk word tokenizer
-    nltk.download('punkt')
-
     premise, hypothesis, sentence, label, premise_highlight_idx, hypothesis_highlight_idx, highlight = [], [], [], [], [], [], []
     for row in rows:
         s1, s2 = row['Sentence1'], row['Sentence2']
