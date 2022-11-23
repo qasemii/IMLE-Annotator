@@ -157,7 +157,7 @@ def main(argv):
 
     # tokenize using nltk word tokenizer
     nltk.download('punkt')
-    tokenized_sentence = nltk_word_tokenize(train_data['sentences']['merged'])
+    tokenized_sentence = nltk_word_tokenize(train_data['sentence']['merged'])
 
     # the dictionary mapping words to their IDs
     word_to_id = dict()
@@ -204,7 +204,7 @@ def main(argv):
     val_data = get_data(VALIDATION_INPUT_PATH)
 
     # tokenize using nltk word tokenizer
-    tokenized_sentence = nltk_word_tokenize(val_data['sentences'])
+    tokenized_sentence = nltk_word_tokenize(val_data['sentence'])
 
     # now we iterate again to assign IDs -
     X_val_list, y_val_list = [], []
@@ -224,7 +224,7 @@ def main(argv):
     test_data = get_data(TEST_INPUT_PATH)
 
     # tokenize using nltk word tokenizer
-    tokenized_sentence = nltk_word_tokenize(test_data['sentences']['merged'])
+    tokenized_sentence = nltk_word_tokenize(test_data['sentence']['merged'])
 
     # now we iterate again to assign IDs -
     X_test_list, y_test_list = [], []

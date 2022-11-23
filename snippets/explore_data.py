@@ -9,7 +9,7 @@ from nltk.tokenize import word_tokenize
 def get_data(file_dir):
     file = open(file_dir)
     rows = csv.DictReader(file)
-    
+
     # tokenize using nltk word tokenizer
     nltk.download('punkt')
 
