@@ -156,6 +156,7 @@ def main(argv):
     train_data = get_data(TRAIN_INPUT_PATH)
 
     # tokenize using nltk word tokenizer
+    nltk.download('punkt')
     tokenized_sentence = nltk_word_tokenize(train_data['sentences']['merged'])
 
     # the dictionary mapping words to their IDs

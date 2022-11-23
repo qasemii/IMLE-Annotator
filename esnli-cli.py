@@ -27,11 +27,11 @@ from imle.solvers import mathias_select_k
 
 from sklearn.model_selection import train_test_split
 
-from l2x.torch.utils import set_seed, subset_precision_esnli
+from l2x.torch.utils import set_seed, subset_precision
 from l2x.torch.modules import Model, ConcreteDistribution, SampleSubset, IMLETopK
 from l2x.utils import pad_sequences
 
-from snippets.explore_data import get_data
+from snippets.explore_data import get_data, nltk_word_tokenize
 
 from typing import Optional, Callable
 
@@ -46,12 +46,7 @@ logger = logging.getLogger(os.path.basename(sys.argv[0]))
 #############################################################
 # util functions ############################################
 #############################################################
-def nltk_word_tokenize(input_list):
-    # tokenize using nltk word tokenizer
-    tokenized_sentence = []
-    for i in range(len(input_list)):
-        tokenized_sentence.append(word_tokenize(input_list[i]))
-    return tokenized_sentence
+
 
 #############################################################
 #############################################################
@@ -89,7 +84,8 @@ def evaluate(model_eval: Model,
 
 
 def main(argv):
-    parser = argparse.ArgumentParser('PyTorch I-MLE/BeerAdvocate', formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+    parser = argparse.ArgumentParser('PyTorch I-MLE/BeerAdvocate',
+                                     formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
     parser.add_argument('--aspect', '-a', action='store', type=int, default=1, help='Aspect')
     parser.add_argument('--epochs', '-e', action='store', type=int, default=20, help='Epochs')
@@ -148,7 +144,7 @@ def main(argv):
     # max_features = token_id_counter + 1
     maxlen = args.max_len
     batch_size = args.batch_size
-    embedding_dims = 200
+    embedding_dims = 300
     kernel_size = args.kernel_size
     hidden_dims = args.hidden_dims
     epochs = args.epochs
@@ -161,7 +157,7 @@ def main(argv):
 
     # tokenize using nltk word tokenizer
     nltk.download('punkt')
-    tokenized_sentence = nltk_word_tokenize(train_data['sentences'])
+    tokenized_sentence = nltk_word_tokenize(train_data['sentences']['merged'])
 
     # the dictionary mapping words to their IDs
     word_to_id = dict()
@@ -185,11 +181,12 @@ def main(argv):
     id_to_label = {value: key for key, value in label_to_id.items()}
 
     # Train data #########################################################
+    print("Loading train data...")
     X_train_list, y_train_list = [], []
 
     # now we iterate again to assign IDs - Train
     for token_list in tokenized_sentence:
-        token_id_list = [word_to_id [token] for token in token_list]
+        token_id_list = [word_to_id[token] for token in token_list]
         X_train_list.append(token_id_list)
 
     y_train_list = [label_to_id[label] for label in train_data['labels']]
@@ -197,7 +194,6 @@ def main(argv):
     X_train = pad_sequences(X_train_list, max_len=maxlen)
     y_train = np.asarray(y_train_list)
 
-    # generate the pytorch dataset
     X_train_t = torch.tensor(X_train, dtype=torch.long, device=device)
     y_train_t = torch.tensor(y_train, dtype=torch.float, device=device)
     train_dataset = TensorDataset(X_train_t, y_train_t)
@@ -228,7 +224,7 @@ def main(argv):
     test_data = get_data(TEST_INPUT_PATH)
 
     # tokenize using nltk word tokenizer
-    tokenized_sentence = nltk_word_tokenize(test_data['sentences'])
+    tokenized_sentence = nltk_word_tokenize(test_data['sentences']['merged'])
 
     # now we iterate again to assign IDs -
     X_test_list, y_test_list = [], []
@@ -243,6 +239,7 @@ def main(argv):
     y_test = np.asarray(y_test_list)
 
     # GloVe ###############################################################
+    print('Loading GloVe ...')
     # create word_vec with glove vectors
     GLOVE_PATH = '/content/gdrive/MyDrive/glove.42B.300d.txt'
     word_vec = {}
@@ -253,16 +250,16 @@ def main(argv):
                 word_vec[word] = np.array(list(map(float, vec.split())))
     print('Found %s word vectors.' % len(word_vec))
 
-    GLOVE_DIM = 300
-    embedding_matrix = np.zeros((len(word_to_id) + 1, GLOVE_DIM))
+    embedding_matrix = np.zeros((len(word_to_id) + 1, embedding_dims))
     for word, i in word_to_id.items():
         embedding_vector = word_vec.get(word)
         if embedding_vector is not None:
             # words not found in embedding index will be all-zeros.
             embedding_matrix[i] = embedding_vector
-            
+
     embedding_matrix_t = torch.tensor(embedding_matrix, dtype=torch.float, requires_grad=False, device=device)
 
+    # Model # GloVe #########################################################
     print('Creating model...')
 
     val_loss_lst = []
@@ -363,10 +360,12 @@ def main(argv):
             tau = args.sst_temperature
 
             differentiable_select_k = ConcreteDistribution(tau=tau, k=select_k, device=device)
+
         elif method_name in {'softsub'}:
             tau = args.softsub_temperature
 
             differentiable_select_k = SampleSubset(tau=tau, k=select_k, device=device)
+
         else:
             assert False, f'Method not supported: {method_name}'
 
@@ -384,9 +383,9 @@ def main(argv):
             print(f'\t{name}\t{pt.size()}\t{pt.numel()}')
             group_name_to_nparams[group_name] = group_name_to_nparams.get(group_name, 0) + pt.numel()
 
-        print('Model modules:')
-        for name, nparams in group_name_to_nparams.items():
-            print(f'\t{name}\t{nparams}')
+        # print('Model modules:')
+        # for name, nparams in group_name_to_nparams.items():
+        #     print(f'\t{name}\t{nparams}')
 
         train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
         optimizer = optim.Adam(model.parameters(), lr=0.001, eps=1e-7)
@@ -446,7 +445,8 @@ def main(argv):
                 torch.save({'model_state_dict': model.state_dict()}, checkpoint_path)
                 best_val_loss = val_loss
 
-            wandb.log({'seed': seed, 'val_loss': val_loss, 'test_loss': test_loss, 'loss_mean': loss_mean}, step=epoch_no)
+            wandb.log({'seed': seed, 'val_loss': val_loss, 'test_loss': test_loss, 'loss_mean': loss_mean},
+                      step=epoch_no)
 
         duration = time.time() - st
         print(f'[{seed}] Training time is {duration} ms')
@@ -464,13 +464,11 @@ def main(argv):
         print(f"[{seed}] Test Loss: {test_loss:.5f}")
         test_loss_lst += [test_loss]
 
-        subset_prec = subset_precision_esnli(model, test_data, id_to_word, word_to_id, select_k,
-                                       device=device, max_len=maxlen) * 100.0
+        subset_prec = subset_precision(model, aspect, id_to_word, word_to_id, select_k,device=device, max_len=maxlen)*100
         print(f"[{seed}] Subset precision: {subset_prec:.5f}")
         subset_precision_lst += [subset_prec]
 
         wandb.log({'best_val_loss': val_loss, 'best_test_loss': test_loss, 'best_subset_prec': subset_prec})
-
         wandb.finish()
 
     print(f'Final Subset Precision List: {np.mean(subset_precision_lst):.5f} ± {np.std(subset_precision_lst):.5f}')
@@ -480,7 +478,7 @@ def main(argv):
     if os.path.exists(checkpoint_path):
         os.remove(checkpoint_path)
 
-    print('Experiment completed.')
+    print('Experiment completed\n-------------------------')
 
 
 if __name__ == '__main__':
