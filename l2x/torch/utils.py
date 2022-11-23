@@ -47,6 +47,8 @@ def subset_precision(model, aspect, id_to_word, word_to_id, select_k, device: to
             data.append(item)
             num_annotated_reviews = num_annotated_reviews + 1
 
+    highlights = []
+
     selected_word_counter = 0
     correct_selected_counter = 0
 
@@ -74,23 +76,45 @@ def subset_precision(model, aspect, id_to_word, word_to_id, select_k, device: to
         # [L,]
         selected_words = np.vectorize(id_to_word.get)(x_val_selected)[0][-review_length:]
         selected_nonpadding_word_counter = 0
-
         for i, w in enumerate(selected_words):
             if w != '<PAD>':  # we are nice to the L2X approach by only considering selected non-pad tokens
                 selected_nonpadding_word_counter = selected_nonpadding_word_counter + 1
                 for r in ranges:
-                    rl = list(r)
-                    if i in range(rl[0], rl[1]):
+                    if i in range(r[0], r[1]):
                         correct_selected_counter = correct_selected_counter + 1
+
+                        # highlight the correct selected tokens
+                        text_list[i] = '}\hlc[purple!30]{' + text_list[i] + \
+                                       '}\hlc[cyan!30]{'
+                        selected_words[i] = '<PAD>'
+                        break
+
+        for i, w in enumerate(selected_words):
+            if w != '<PAD>':
+                # highlight the wrong selected tokens
+                text_list[i] = '\hlc[red!60]{' + text_list[i] + '}'
+
+        for r in ranges:
+            # highlight the ground truth tokens
+            text_list[r[0]] = '\hlc[cyan!30]{' + text_list[r[0]]
+            text_list[r[1] - 1] = text_list[r[1] - 1] + '}'
+
+        highlights.append(' '.join(text_list) + '\\\\')
+
         # we make sure that we select at least 10 non-padding words
         # if we have more than select_k non-padding words selected, we allow it but count that in
         selected_word_counter = selected_word_counter + max(selected_nonpadding_word_counter, select_k)
+
+    with open("highlights.txt", "w") as f:
+        f.write('\n\n'.join(highlights))
 
     return correct_selected_counter / selected_word_counter
 
 def subset_precision_esnli(model, test_data, id_to_word, word_to_id, select_k, device: torch.device, max_len: int = 350):
     # tokenize using nltk word tokenizer
     tokenized_sentence = nltk_word_tokenize(test_data['sentences'])
+
+    highlights_list = []
 
     selected_word_counter = 0
     correct_selected_counter = 0
@@ -116,13 +140,36 @@ def subset_precision_esnli(model, test_data, id_to_word, word_to_id, select_k, d
         selected_nonpadding_word_counter = 0
 
         highlights = [word_to_id.get(token, 0) for token in test_data['highlights'][anotr]]
+
         for i, w in enumerate(selected_words):
             if w != '<PAD>':  # we are nice to the L2X approach by only considering selected non-pad tokens
                 selected_nonpadding_word_counter = selected_nonpadding_word_counter + 1
                 if i in highlights:
                     correct_selected_counter = correct_selected_counter + 1
+
+                    # highlight the correct selected tokens
+                    text_list[i] = '}\hlc[purple!30]{' + text_list[i] + \
+                                   '}\hlc[cyan!30]{'
+                    selected_words[i] = '<PAD>'
+                    break
+
+        for i, w in enumerate(selected_words):
+            if w != '<PAD>':
+                # highlight the wrong selected tokens
+                text_list[i] = '\hlc[red!60]{' + text_list[i] + '}'
+
+        for r in highlights:
+            # highlight the ground truth tokens
+            text_list[r[0]] = '\hlc[cyan!30]{' + text_list[r[0]]
+            text_list[r[1] - 1] = text_list[r[1] - 1] + '}'
+
+        highlights_list.append(' '.join(text_list) + '\\\\')
+
         # we make sure that we select at least 10 non-padding words
         # if we have more than select_k non-padding words selected, we allow it but count that in
         selected_word_counter = selected_word_counter + max(selected_nonpadding_word_counter, select_k)
+
+    with open("highlights.txt", "w") as f:
+        f.write('\n\n'.join(highlights_list))
 
     return correct_selected_counter / selected_word_counter
