@@ -140,11 +140,7 @@ def subset_precision_esnli(model, test_data, id_to_word, word_to_id, select_k, d
         selected_nonpadding_word_counter = 0
 
         highlights = test_data['highlights'][anotr]
-
-        for i, w in enumerate(selected_words):
-            # highlight the correct selected tokens
-            text_list[i] = '\hlc[cyan!30]{' + text_list[i] + '}'
-
+        selected_highlights = []
         for i, w in enumerate(selected_words):
             if w != '<PAD>':  # we are nice to the L2X approach by only considering selected non-pad tokens
                 selected_nonpadding_word_counter = selected_nonpadding_word_counter + 1
@@ -154,12 +150,17 @@ def subset_precision_esnli(model, test_data, id_to_word, word_to_id, select_k, d
                     # highlight the correct selected tokens
                     text_list[i] = '\hlc[purple!30]{' + text_list[i] + '}'
                     selected_words[i] = '<PAD>'
+                    selected_highlights.append(w)
                     break
 
         for i, w in enumerate(selected_words):
             if w != '<PAD>':
                 # highlight the wrong selected tokens
                 text_list[i] = '\hlc[red!60]{' + text_list[i] + '}'
+
+        for i, w in enumerate(selected_words):
+            if w in highlights and w not in selected_highlights:
+                text_list[i] = '\hlc[cyan!30]{' + text_list[i] + '}'
 
         highlights_list.append(' '.join(text_list) + '\\\\')
 
