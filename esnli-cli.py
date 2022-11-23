@@ -27,7 +27,7 @@ from imle.solvers import mathias_select_k
 
 from sklearn.model_selection import train_test_split
 
-from l2x.torch.utils import set_seed, subset_precision
+from l2x.torch.utils import set_seed, subset_precision_esnli
 from l2x.torch.modules import Model, ConcreteDistribution, SampleSubset, IMLETopK
 from l2x.utils import pad_sequences
 
@@ -270,8 +270,8 @@ def main(argv):
     subset_precision_lst = []
 
     # Cross Entropy as loss with ignoring <PAD> (ignore_index=0)
-    loss_function = torch.nn.CrossEntropyLoss(ignore_index=0)
-    # loss_function_nored = torch.nn.CrossEntropyLoss(ignore_index=0, reduction='none')
+    loss_function = torch.nn.CrossEntropyLoss()
+    # loss_function_nored = torch.nn.CrossEntropyLoss(reduction='none')
 
     # here we can now iterate a few times to compute statistics
     for seed in range(args.reruns):
@@ -464,7 +464,7 @@ def main(argv):
         print(f"[{seed}] Test Loss: {test_loss:.5f}")
         test_loss_lst += [test_loss]
 
-        subset_prec = subset_precision(model, aspect, id_to_word, word_to_id, select_k,
+        subset_prec = subset_precision_esnli(model, test_data, id_to_word, word_to_id, select_k,
                                        device=device, max_len=maxlen) * 100.0
         print(f"[{seed}] Subset precision: {subset_prec:.5f}")
         subset_precision_lst += [subset_prec]
