@@ -157,10 +157,12 @@ def subset_precision_esnli(model, test_data, id_to_word, word_to_id, select_k, d
             if w != '<PAD>':
                 # highlight the wrong selected tokens
                 text_list[i] = '\hlc[red!60]{' + text_list[i] + '}'
+                selected_words[i] = '<PAD>'
 
         for i, w in enumerate(selected_words):
-            if w in highlights and w not in selected_highlights:
-                text_list[i] = '\hlc[cyan!30]{' + text_list[i] + '}'
+            if w != '<PAD>':
+                if w in highlights and w not in selected_highlights:
+                    text_list[i] = '\hlc[cyan!30]{' + text_list[i] + '}'
 
         highlights_list.append(' '.join(text_list) + '\\\\')
 
