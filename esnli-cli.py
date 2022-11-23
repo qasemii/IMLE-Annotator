@@ -156,7 +156,7 @@ def main(argv):
     checkpoint_path = args.checkpoint
 
     # get data dictionary
-    TRAIN_INPUT_PATH = '../data/esnli_train_1.csv'
+    TRAIN_INPUT_PATH = 'data/esnli_train_1.csv'
     train_data = get_data(TRAIN_INPUT_PATH)
 
     # tokenize using nltk word tokenizer
@@ -203,7 +203,7 @@ def main(argv):
 
     # Validation data #####################################################
     print("Loading validation data...")
-    VALIDATION_INPUT_PATH = '../data/esnli_dev.csv'
+    VALIDATION_INPUT_PATH = 'data/esnli_dev.csv'
     val_data = get_data(VALIDATION_INPUT_PATH)
 
     # tokenize using nltk word tokenizer
@@ -223,7 +223,7 @@ def main(argv):
 
     # Test data ###########################################################
     print("Loading test data...")
-    TEST_INPUT_PATH = '../data/esnli_test.csv'
+    TEST_INPUT_PATH = 'data/esnli_test.csv'
     test_data = get_data(TEST_INPUT_PATH)
 
     # tokenize using nltk word tokenizer
@@ -243,7 +243,7 @@ def main(argv):
 
     # GloVe ###############################################################
     # create word_vec with glove vectors
-    GLOVE_PATH = '../data/GloVe/glove.42B.300d .txt'
+    GLOVE_PATH = '/content/gdrive/MyDrive/glove.42B.300d.txt'
     word_vec = {}
     with open(GLOVE_PATH) as f:
         for line in f:
