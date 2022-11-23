@@ -31,7 +31,7 @@ from l2x.torch.utils import set_seed, subset_precision
 from l2x.torch.modules import Model, ConcreteDistribution, SampleSubset, IMLETopK
 from l2x.utils import pad_sequences
 
-from snippets.explore_data import get_data
+from snippets.explore_data import get_data, nltk_word_tokenize
 
 from typing import Optional, Callable
 
@@ -46,12 +46,7 @@ logger = logging.getLogger(os.path.basename(sys.argv[0]))
 #############################################################
 # util functions ############################################
 #############################################################
-def nltk_word_tokenize(input_list):
-    # tokenize using nltk word tokenizer
-    tokenized_sentence = []
-    for i in range(len(input_list)):
-        tokenized_sentence.append(word_tokenize(input_list[i]))
-    return tokenized_sentence
+
 
 #############################################################
 #############################################################

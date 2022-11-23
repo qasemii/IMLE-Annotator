@@ -1,4 +1,5 @@
 import csv
+from nltk.tokenize import word_tokenize
 # from utils.preprocess_eSNLI import csv_to_txt
 
 
@@ -29,8 +30,9 @@ def get_data(file_dir):
     return {'sentences': sentences, 'labels': labels, 'highlights': highlights}
 
 
-NLI_DIC_LABELS = {'entailment': 2, 'neutral': 1, 'contradiction': 0}
-
-# print(len(sentences))
-# print(len(labels))
-# print(len(highlights))
+def nltk_word_tokenize(input_list):
+    # tokenize using nltk word tokenizer
+    tokenized_sentence = []
+    for i in range(len(input_list)):
+        tokenized_sentence.append(word_tokenize(input_list[i]))
+    return tokenized_sentence
