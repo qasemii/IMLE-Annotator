@@ -110,15 +110,14 @@ def subset_precision(model, aspect, id_to_word, word_to_id, select_k, device: to
 
     return correct_selected_counter / selected_word_counter
 
-def subset_precision_esnli(model, test_data, id_to_word, word_to_id, select_k, device: torch.device, max_len: int = 350):
+def subset_precision_esnli(model, data, id_to_word, word_to_id, select_k, device: torch.device, max_len: int = 350):
     # tokenize using nltk word tokenizer
-    tokenized_sentence = nltk_word_tokenize(test_data['sentences'])
+    tokenized_sentence = nltk_word_tokenize(data['sentence']['merged'])
 
-    highlights_list = []
+    marked_highlights_list = []
 
-    selected_word_counter = 0
-    correct_selected_counter = 0
-    for anotr in range(len(test_data['sentences'])):
+    selected_word_counter, correct_selected_counter = 0, 0
+    for anotr in range(len(tokenized_sentence)):
         text_list = tokenized_sentence[anotr]
         review_length = len(text_list)
 
@@ -139,21 +138,24 @@ def subset_precision_esnli(model, test_data, id_to_word, word_to_id, select_k, d
         selected_words = np.vectorize(id_to_word.get)(x_val_selected)[0][-review_length:]
         selected_nonpadding_word_counter = 0
 
-        highlights = test_data['highlights'][anotr]
-        highlights_idx = test_data['highlights_idx'][anotr]
+        premise_highlights = data['highlight']['premise'][anotr]
+        hypothesis_highlights = data['highlight']['hypothesis'][anotr]
+
+        highlights_idx = data['highlight']['merged'][anotr]
         selected_highlights = []
         for i, w in enumerate(selected_words):
             if w != '<PAD>':  # we are nice to the L2X approach by only considering selected non-pad tokens
                 selected_nonpadding_word_counter = selected_nonpadding_word_counter + 1
                 if i in highlights_idx:
+                    # correct selected words
                     correct_selected_counter = correct_selected_counter + 1
-
-                    # highlight the correct selected tokens
                     text_list[i] = '\hlc[purple!30]{' + text_list[i] + '}'
                     highlights_idx.remove(i)
                 else:
+                    # wrong selected words
                     text_list[i] = '\hlc[red!60]{' + text_list[i] + '}'
 
+                # exclude explored words
                 selected_words[i] = '<PAD>'
 
         for i in highlights_idx:
@@ -161,13 +163,13 @@ def subset_precision_esnli(model, test_data, id_to_word, word_to_id, select_k, d
             text_list[i] = '\hlc[cyan!30]{' + text_list[i] + '}'
             selected_words[i] = '<PAD>'
 
-        highlights_list.append(' '.join(text_list) + '\\\\')
+        marked_highlights_list.append(' '.join(text_list) + '\\\\')
 
         # we make sure that we select at least 10 non-padding words
         # if we have more than select_k non-padding words selected, we allow it but count that in
         selected_word_counter = selected_word_counter + max(selected_nonpadding_word_counter, select_k)
 
     with open("highlights.txt", "w") as f:
-        f.write('\n\n'.join(highlights_list))
+        f.write('\n\n'.join(marked_highlights_list))
 
     return correct_selected_counter / selected_word_counter
