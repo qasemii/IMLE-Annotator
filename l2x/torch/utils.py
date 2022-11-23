@@ -139,17 +139,20 @@ def subset_precision_esnli(model, test_data, id_to_word, word_to_id, select_k, d
         selected_words = np.vectorize(id_to_word.get)(x_val_selected)[0][-review_length:]
         selected_nonpadding_word_counter = 0
 
-        highlights = [word_to_id.get(token, 0) for token in test_data['highlights'][anotr]]
+        highlights = test_data['highlights'][anotr]
+
+        for i, w in enumerate(selected_words):
+            # highlight the correct selected tokens
+            text_list[i] = '\hlc[cyan!30]{' + text_list[i] + '}'
 
         for i, w in enumerate(selected_words):
             if w != '<PAD>':  # we are nice to the L2X approach by only considering selected non-pad tokens
                 selected_nonpadding_word_counter = selected_nonpadding_word_counter + 1
-                if i in highlights:
+                if w in highlights:
                     correct_selected_counter = correct_selected_counter + 1
 
                     # highlight the correct selected tokens
-                    text_list[i] = '}\hlc[purple!30]{' + text_list[i] + \
-                                   '}\hlc[cyan!30]{'
+                    text_list[i] = '\hlc[purple!30]{' + text_list[i] + '}'
                     selected_words[i] = '<PAD>'
                     break
 
@@ -157,11 +160,6 @@ def subset_precision_esnli(model, test_data, id_to_word, word_to_id, select_k, d
             if w != '<PAD>':
                 # highlight the wrong selected tokens
                 text_list[i] = '\hlc[red!60]{' + text_list[i] + '}'
-
-        for r in highlights:
-            # highlight the ground truth tokens
-            text_list[r[0]] = '\hlc[cyan!30]{' + text_list[r[0]]
-            text_list[r[1] - 1] = text_list[r[1] - 1] + '}'
 
         highlights_list.append(' '.join(text_list) + '\\\\')
 
