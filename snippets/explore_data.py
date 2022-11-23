@@ -9,7 +9,7 @@ def get_data(file_dir):
     file = open(file_dir)
     rows = csv.DictReader(file)
 
-    premise, hypothesis, sentence, label, premise_highlight_idx, hypothesis_highlight_idx = [], [], [], [], [], []
+    premise, hypothesis, sentence, label, premise_highlight_idx, hypothesis_highlight_idx, highlight = [], [], [], [], [], [], []
     for row in rows:
         s1, s2 = row['Sentence1'], row['Sentence2']
         s = s1 + ' ' + s2
@@ -46,15 +46,20 @@ def get_data(file_dir):
         premise.append(s1)
         hypothesis.append(s2)
         sentence.append(s)
+
         label.append(l)
+
         premise_highlight_idx.append(s1_highlight)
         hypothesis_highlight_idx.append(s2_highlight)
+
+        h = premise_highlight_idx + [h + len(premise_highlight_idx) for h in hypothesis_highlight_idx]
+        highlight.append(h)
 
     return {'sentence': {'merged': sentence,
                          'premise': premise,
                          'hypothesis': hypothesis},
             'labels': label,
-            'highlight': {'merged': None,
+            'highlight': {'merged': highlight,
                           'premise': premise_highlight_idx,
                           'hypothesis': hypothesis_highlight_idx}}
 
@@ -68,6 +73,6 @@ def nltk_word_tokenize(input_list):
 
 
 # # get data dictionary
-TRAIN_INPUT_PATH = '../data/esnli_test.csv'
-train_data = get_data(TRAIN_INPUT_PATH)
-print('Done')
+# TRAIN_INPUT_PATH = '../data/esnli_test.csv'
+# train_data = get_data(TRAIN_INPUT_PATH)
+# print('Done')
