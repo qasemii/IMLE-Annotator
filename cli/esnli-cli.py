@@ -204,7 +204,7 @@ def main(argv):
     val_data = get_data(VALIDATION_INPUT_PATH)
 
     # tokenize using nltk word tokenizer
-    tokenized_sentence = nltk_word_tokenize(val_data['sentence'])
+    tokenized_sentence = nltk_word_tokenize(val_data['sentence']['merged'])
 
     # now we iterate again to assign IDs -
     X_val_list, y_val_list = [], []
