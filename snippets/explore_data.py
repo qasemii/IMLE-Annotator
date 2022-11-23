@@ -1,4 +1,5 @@
 import csv
+import nltk
 from nltk.tokenize import word_tokenize
 
 
@@ -8,6 +9,9 @@ from nltk.tokenize import word_tokenize
 def get_data(file_dir):
     file = open(file_dir)
     rows = csv.DictReader(file)
+    
+    # tokenize using nltk word tokenizer
+    nltk.download('punkt')
 
     premise, hypothesis, sentence, label, premise_highlight_idx, hypothesis_highlight_idx, highlight = [], [], [], [], [], [], []
     for row in rows:
@@ -73,6 +77,6 @@ def nltk_word_tokenize(input_list):
 
 
 # # get data dictionary
-TRAIN_INPUT_PATH = '../data/esnli_test.csv'
-train_data = get_data(TRAIN_INPUT_PATH)
-print('Done')
+# TRAIN_INPUT_PATH = '../data/esnli_test.csv'
+# train_data = get_data(TRAIN_INPUT_PATH)
+# print('Done')
