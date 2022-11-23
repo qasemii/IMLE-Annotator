@@ -1,48 +1,62 @@
 import csv
 from nltk.tokenize import word_tokenize
+
+
 # from utils.preprocess_eSNLI import csv_to_txt
 
 
-file_dir = "esnli_train_1.csv"
-
-
 def get_data(file_dir):
-    global highlights_idx
     file = open(file_dir)
     rows = csv.DictReader(file)
 
-    sentences, labels, highlights, highlights_idx = [], [], [], []
+    premise, hypothesis, sentence, label, premise_highlight_idx, hypothesis_highlight_idx = [], [], [], [], [], []
     for row in rows:
-        premise, hypothesis = row['Sentence1'], row['Sentence2']
-        sentence = premise + ' ' + hypothesis
-        label = row['gold_label']
+        s1, s2 = row['Sentence1'], row['Sentence2']
+        s = s1 + ' ' + s2
+        l = row['gold_label']
 
-        highlighted_premise, highlighted_hypothesis = row['Sentence1_marked_1'], row['Sentence2_marked_1']
-        l1, l2 = len(highlighted_premise.split('*')) // 2, len(highlighted_hypothesis.split('*')) // 2
+        premise_marked, hypothesis_marked = row['Sentence1_marked_1'], row['Sentence2_marked_1']
+        premise_marked_split, hypothesis_marked_split = premise_marked.split(), hypothesis_marked.split()
+        sentence_marked = premise_marked_split + hypothesis_marked_split
 
-        premise_highlights = [highlighted_premise.split('*')[2 * i + 1] for i in range(l1)]
-        hypothesis_highlights = [highlighted_hypothesis.split('*')[2 * i + 1] for i in range(l2)]
-        highlight = premise_highlights + hypothesis_highlights
-        # we remove punctuations from highlights - otherwise subset precision would be wrong
-        for i, h in enumerate(highlight):
-            if len(h.split()) != 1:
-                highlight = h.split()[0]
+        # l1, l2 = len(highlighted_premise.split('*')) // 2, len(highlighted_hypothesis.split('*')) // 2
+        #
+        # premise_highlights = [highlighted_premise.split('*')[2 * i + 1] for i in range(l1)]
+        # hypothesis_highlights = [highlighted_hypothesis.split('*')[2 * i + 1] for i in range(l2)]
+        # highlight = premise_highlights + hypothesis_highlights
+        # # we remove punctuations from highlights - otherwise subset precision would be wrong
+        # for i, h in enumerate(highlight):
+        #     temp = h.split('.')
+        #     if len(h.split('.')) != 1:
+        #         highlight = h.split('.')[0]
+        #     elif len(h.split(',')) != 1:
+        #         highlight = h.split(',')[0]
 
-        premise_highlights = highlighted_premise.split()
-        hypothesis_highlights = highlighted_hypothesis.split()
-        sentence_marked = premise_highlights + hypothesis_highlights
-        highlight_idx = []
-        for i, s in enumerate(sentence_marked):
+        s1_highlight, s2_highlight = [], []
+        for i, s in enumerate(premise_marked.split()):
             temp = s.split('*')
             if len(s.split('*')) != 1:
-                highlight_idx.append(i)
+                s1_highlight.append(i)
 
-        sentences.append(sentence)
-        labels.append(label)
-        highlights.append(highlight)
-        highlights_idx.append(highlight_idx)
+        for i, s in enumerate(hypothesis_marked.split()):
+            temp = s.split('*')
+            if len(s.split('*')) != 1:
+                s2_highlight.append(i)
 
-    return {'sentences': sentences, 'labels': labels, 'highlights': highlights, 'highlights_idx': highlights_idx}
+        premise.append(s1)
+        hypothesis.append(s2)
+        sentence.append(s)
+        label.append(l)
+        premise_highlight_idx.append(s1_highlight)
+        hypothesis_highlight_idx.append(s2_highlight)
+
+    return {'sentence': {'merged': sentence,
+                         'premise': premise,
+                         'hypothesis': hypothesis},
+            'labels': label,
+            'highlight': {'merged': None,
+                          'premise': premise_highlight_idx,
+                          'hypothesis': hypothesis_highlight_idx}}
 
 
 def nltk_word_tokenize(input_list):
@@ -52,7 +66,8 @@ def nltk_word_tokenize(input_list):
         tokenized_sentence.append(word_tokenize(input_list[i]))
     return tokenized_sentence
 
+
 # # get data dictionary
-# TRAIN_INPUT_PATH = '../data/esnli_train_1.csv'
-# train_data = get_data(TRAIN_INPUT_PATH)
-# print('Done')
+TRAIN_INPUT_PATH = '../data/esnli_test.csv'
+train_data = get_data(TRAIN_INPUT_PATH)
+print('Done')
