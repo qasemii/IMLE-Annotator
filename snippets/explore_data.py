@@ -23,6 +23,11 @@ def get_data(file_dir):
         hypothesis_highlights = [highlighted_hypothesis.split('*')[2 * i + 1] for i in range(l2)]
         highlight = premise_highlights + hypothesis_highlights
 
+        # we remove punctuations from highlights - otherwise subset precision would be wrong
+        for i, h in enumerate(highlight):
+            if len(h.split()) != 1:
+                highlight = h.split()[0]
+
         sentences.append(sentence)
         labels.append(label)
         highlights.append(highlight)
