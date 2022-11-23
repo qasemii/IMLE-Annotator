@@ -73,7 +73,7 @@ def evaluate(model_eval: Model,
              x_eval: np.ndarray,
              y_eval: np.ndarray,
              device: torch.device) -> float:
-    mse = torch.nn.MSELoss()
+    loss = torch.nn.CrossEntropyLoss()
     x_eval_t = torch.tensor(x_eval, dtype=torch.long, device=device)
     y_eval_t = torch.tensor(y_eval, dtype=torch.float, device=device)
     eval_dataset = TensorDataset(x_eval_t, y_eval_t)
@@ -84,8 +84,8 @@ def evaluate(model_eval: Model,
         for X, y in eval_loader:
             p_eval_lst += model_eval(x=X).view(-1).tolist()
         p_eval_t = torch.tensor(p_eval_lst, dtype=torch.float, requires_grad=False, device=device)
-        mse_value = mse(p_eval_t, y_eval_t)
-    return mse_value.item()
+        loss_value = loss(p_eval_t, y_eval_t)
+    return loss_value.item()
 
 
 def main(argv):
@@ -160,6 +160,7 @@ def main(argv):
     train_data = get_data(TRAIN_INPUT_PATH)
 
     # tokenize using nltk word tokenizer
+    nltk.download('punkt')
     tokenized_sentence = nltk_word_tokenize(train_data['sentences'])
 
     # the dictionary mapping words to their IDs
@@ -441,9 +442,9 @@ def main(argv):
             test_loss = evaluate(model, X_test, y_test, device=device)
 
             if best_val_loss is None or val_loss <= best_val_loss:
-                print(f'Saving new checkpoint -- new best validation MSE: {val_loss:.5f}')
+                print(f'Saving new checkpoint -- new best validation Loss: {val_loss:.5f}')
                 torch.save({'model_state_dict': model.state_dict()}, checkpoint_path)
-                best_val_mse = val_loss
+                best_val_loss = val_loss
 
             wandb.log({'seed': seed, 'val_loss': val_loss, 'test_loss': test_loss, 'loss_mean': loss_mean}, step=epoch_no)
 
@@ -455,20 +456,20 @@ def main(argv):
             checkpoint = torch.load(checkpoint_path)
             model.load_state_dict(checkpoint['model_state_dict'])
 
-        val_mse = evaluate(model, X_val, y_val, device=device) * 100.0
-        print(f"[{seed}] Validation Loss: {val_mse:.5f}")
-        val_loss_lst += [val_mse]
+        val_loss = evaluate(model, X_val, y_val, device=device) * 100.0
+        print(f"[{seed}] Validation Loss: {val_loss:.5f}")
+        val_loss_lst += [val_loss]
 
-        test_mse = evaluate(model, X_test, y_test, device=device) * 100.0
-        print(f"[{seed}] Test Loss: {test_mse:.5f}")
-        test_loss_lst += [test_mse]
+        test_loss = evaluate(model, X_test, y_test, device=device) * 100.0
+        print(f"[{seed}] Test Loss: {test_loss:.5f}")
+        test_loss_lst += [test_loss]
 
         subset_prec = subset_precision(model, aspect, id_to_word, word_to_id, select_k,
                                        device=device, max_len=maxlen) * 100.0
         print(f"[{seed}] Subset precision: {subset_prec:.5f}")
         subset_precision_lst += [subset_prec]
 
-        wandb.log({'best_val_loss': val_mse, 'best_test_loss': test_mse, 'best_subset_prec': subset_prec})
+        wandb.log({'best_val_loss': val_loss, 'best_test_loss': test_loss, 'best_subset_prec': subset_prec})
 
         wandb.finish()
 
