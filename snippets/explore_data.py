@@ -52,7 +52,7 @@ def get_data(file_dir):
         premise_highlight_idx.append(s1_highlight)
         hypothesis_highlight_idx.append(s2_highlight)
 
-        h = premise_highlight_idx + [h + len(premise_highlight_idx) for h in hypothesis_highlight_idx]
+        h = s1_highlight + [h + len(word_tokenize(s1)) for h in s2_highlight]
         highlight.append(h)
 
     return {'sentence': {'merged': sentence,
@@ -73,6 +73,6 @@ def nltk_word_tokenize(input_list):
 
 
 # # get data dictionary
-# TRAIN_INPUT_PATH = '../data/esnli_test.csv'
-# train_data = get_data(TRAIN_INPUT_PATH)
-# print('Done')
+TRAIN_INPUT_PATH = '../data/esnli_test.csv'
+train_data = get_data(TRAIN_INPUT_PATH)
+print('Done')
