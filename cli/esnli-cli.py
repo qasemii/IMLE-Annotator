@@ -43,6 +43,20 @@ import logging
 logger = logging.getLogger(os.path.basename(sys.argv[0]))
 
 
+#############################################################
+# util functions ############################################
+#############################################################
+def nltk_word_tokenize(input_list):
+    # tokenize using nltk word tokenizer
+    tokenized_sentence = []
+    for i in range(len(input_list)):
+        tokenized_sentence.append(word_tokenize(input_list[i]))
+    return tokenized_sentence
+
+#############################################################
+#############################################################
+#############################################################
+
 class DifferentiableSelectKModel(torch.nn.Module):
     def __init__(self,
                  diff_fun: Callable[[Tensor], Tensor],
@@ -74,69 +88,79 @@ def evaluate(model_eval: Model,
     return mse_value.item()
 
 
-def main():
-    # parser = argparse.ArgumentParser('PyTorch I-MLE/BeerAdvocate', formatter_class=argparse.ArgumentDefaultsHelpFormatter)
-    #
-    # parser.add_argument('--aspect', '-a', action='store', type=int, default=1, help='Aspect')
-    # parser.add_argument('--epochs', '-e', action='store', type=int, default=20, help='Epochs')
-    # parser.add_argument('--batch-size', '-b', action='store', type=int, default=40, help='Batch Size')
-    # parser.add_argument('--kernel-size', '-k', action='store', type=int, default=3, help='Kernel Size')
-    # parser.add_argument('--hidden-dims', '-H', action='store', type=int, default=250, help='Hidden Dimensions')
-    # parser.add_argument('--max-len', '-m', action='store', type=int, default=350, help='Maximum Sequence Length')
-    # parser.add_argument('--select-k', '-K', action='store', type=int, default=10, help='Select K')
-    #
-    # parser.add_argument("--checkpoint", "-c", action='store', type=str, default='models/model.pt')
-    # parser.add_argument("--reruns", "-r", action='store', type=int, default=10)
-    # parser.add_argument("--method", "-M", type=str, choices=['sst', 'imle', 'imletopk', 'aimle', 'ste', 'softsub'],
-    #                     default='imle', help="Method (SST, IMLE, AIMLE, STE, SoftSub)")
-    #
-    # parser.add_argument('--aimle-symmetric', action='store_true', default=False)
-    # parser.add_argument('--aimle-target', type=str, choices=['standard', 'adaptive'], default='standard')
-    #
-    # parser.add_argument('--imle-noise', type=str, choices=['none', 'sog', 'gumbel'], default='sog')
-    # parser.add_argument('--imle-samples', action='store', type=int, default=1)
-    # parser.add_argument('--imle-input-temperature', action='store', type=float, default=0.0)
-    # parser.add_argument('--imle-output-temperature', action='store', type=float, default=10.0)
-    # parser.add_argument('--imle-lambda', action='store', type=float, default=1000.0)
-    #
-    # parser.add_argument('--aimle-beta-update-step', action='store', type=float, default=0.0001)
-    # parser.add_argument('--aimle-beta-update-momentum', action='store', type=float, default=0.0)
-    # parser.add_argument('--aimle-target-norm', action='store', type=float, default=1.0)
-    #
-    # parser.add_argument('--sst-temperature', action='store', type=float, default=0.1)
-    #
-    # parser.add_argument('--softsub-temperature', action='store', type=float, default=0.5)
-    #
-    # parser.add_argument('--ste-noise', type=str, choices=['none', 'sog', 'gumbel'], default='sog')
-    # parser.add_argument('--ste-temperature', action='store', type=float, default=0.0)
-    #
-    # parser.add_argument('--debug', '-D', action='store_true', default=False)
-    # parser.add_argument('--max-iterations', action='store', type=int, default=None)
-    # parser.add_argument('--gradient-scaling', action='store_true', default=False)
-    #
-    # args = parser.parse_args(argv)
-    #
-    # if args.debug is True:
-    #     torch.autograd.set_detect_anomaly(True)
-    #
-    # hostname = socket.gethostname()
-    # print(f'Hostname: {hostname}')
+def main(argv):
+    parser = argparse.ArgumentParser('PyTorch I-MLE/BeerAdvocate', formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+
+    parser.add_argument('--aspect', '-a', action='store', type=int, default=1, help='Aspect')
+    parser.add_argument('--epochs', '-e', action='store', type=int, default=20, help='Epochs')
+    parser.add_argument('--batch-size', '-b', action='store', type=int, default=40, help='Batch Size')
+    parser.add_argument('--kernel-size', '-k', action='store', type=int, default=3, help='Kernel Size')
+    parser.add_argument('--hidden-dims', '-H', action='store', type=int, default=250, help='Hidden Dimensions')
+    parser.add_argument('--max-len', '-m', action='store', type=int, default=350, help='Maximum Sequence Length')
+    parser.add_argument('--select-k', '-K', action='store', type=int, default=10, help='Select K')
+
+    parser.add_argument("--checkpoint", "-c", action='store', type=str, default='models/model.pt')
+    parser.add_argument("--reruns", "-r", action='store', type=int, default=10)
+    parser.add_argument("--method", "-M", type=str, choices=['sst', 'imle', 'imletopk', 'aimle', 'ste', 'softsub'],
+                        default='imle', help="Method (SST, IMLE, AIMLE, STE, SoftSub)")
+
+    parser.add_argument('--aimle-symmetric', action='store_true', default=False)
+    parser.add_argument('--aimle-target', type=str, choices=['standard', 'adaptive'], default='standard')
+
+    parser.add_argument('--imle-noise', type=str, choices=['none', 'sog', 'gumbel'], default='sog')
+    parser.add_argument('--imle-samples', action='store', type=int, default=1)
+    parser.add_argument('--imle-input-temperature', action='store', type=float, default=0.0)
+    parser.add_argument('--imle-output-temperature', action='store', type=float, default=10.0)
+    parser.add_argument('--imle-lambda', action='store', type=float, default=1000.0)
+
+    parser.add_argument('--aimle-beta-update-step', action='store', type=float, default=0.0001)
+    parser.add_argument('--aimle-beta-update-momentum', action='store', type=float, default=0.0)
+    parser.add_argument('--aimle-target-norm', action='store', type=float, default=1.0)
+
+    parser.add_argument('--sst-temperature', action='store', type=float, default=0.1)
+
+    parser.add_argument('--softsub-temperature', action='store', type=float, default=0.5)
+
+    parser.add_argument('--ste-noise', type=str, choices=['none', 'sog', 'gumbel'], default='sog')
+    parser.add_argument('--ste-temperature', action='store', type=float, default=0.0)
+
+    parser.add_argument('--debug', '-D', action='store_true', default=False)
+    parser.add_argument('--max-iterations', action='store', type=int, default=None)
+    parser.add_argument('--gradient-scaling', action='store_true', default=False)
+
+    args = parser.parse_args(argv)
+
+    if args.debug is True:
+        torch.autograd.set_detect_anomaly(True)
+
+    hostname = socket.gethostname()
+    print(f'Hostname: {hostname}')
 
     device = torch.device('cpu')
     if torch.cuda.is_available():
         device = torch.device('cuda')
+    print(f'Device: {device}')
 
-    # aspect = args.aspect
+    # Set parameters:
+    aspect = args.aspect
+    method_name = args.method
 
-    input_path_train = '/Users/mohammadrezaghasemimadani/Desktop/Code/imle-annotator/data/esnli_train_1.csv'
+    # max_features = token_id_counter + 1
+    maxlen = args.max_len
+    batch_size = args.batch_size
+    embedding_dims = 200
+    kernel_size = args.kernel_size
+    hidden_dims = args.hidden_dims
+    epochs = args.epochs
+    select_k = args.select_k  # Number of selected words by the methods
+    checkpoint_path = args.checkpoint
 
     # get data dictionary
-    data = get_data(input_path_train)
+    TRAIN_INPUT_PATH = '../data/esnli_train_1.csv'
+    train_data = get_data(TRAIN_INPUT_PATH)
 
     # tokenize using nltk word tokenizer
-    tokenized_sentence = []
-    for i in range(len(data['sentences'])):
-        tokenized_sentence.append(word_tokenize(data['sentences'][i]))
+    tokenized_sentence = nltk_word_tokenize(train_data['sentences'])
 
     # the dictionary mapping words to their IDs
     word_to_id = dict()
@@ -156,99 +180,106 @@ def main():
     id_to_word = {value: key for key, value in word_to_id.items()}
 
     # labels
-    label_to_id = {'entailment': 2,  'neutral': 1, 'contradiction': 0}
+    label_to_id = {'entailment': 2, 'neutral': 1, 'contradiction': 0}
     id_to_label = {value: key for key, value in label_to_id.items()}
 
+    # Train data #########################################################
+    X_train_list, y_train_list = [], []
 
-    # Set parameters:
-    method_name = args.method
-
-    # max_features = token_id_counter + 1
-    maxlen = args.max_len
-    batch_size = args.batch_size
-    embedding_dims = 200
-    kernel_size = args.kernel_size
-    hidden_dims = args.hidden_dims
-    epochs = args.epochs
-    select_k = args.select_k  # Number of selected words by the methods
-    checkpoint_path = args.checkpoint
-
-    # prepare train set
-    X_train_list = []
-    Y_train_list = []
     # now we iterate again to assign IDs - Train
     for token_list in tokenized_sentence:
-        tokenid_list = [word_to_id[token] for token in token_list]
-        X_train_list.append(tokenid_list)
+        token_id_list = [word_to_id [token] for token in token_list]
+        X_train_list.append(token_id_list)
 
-    Y_train_list = [label_to_id[label] for label in data['labels']]
+    y_train_list = [label_to_id[label] for label in train_data['labels']]
 
     X_train = pad_sequences(X_train_list, max_len=maxlen)
-    Y_train = np.asarray(Y_train_list)
+    y_train = np.asarray(y_train_list)
 
+    # generate the pytorch dataset
     X_train_t = torch.tensor(X_train, dtype=torch.long, device=device)
-    Y_train_t = torch.tensor(Y_train, dtype=torch.float, device=device)
-    train_dataset = TensorDataset(X_train_t, Y_train_t)
+    y_train_t = torch.tensor(y_train, dtype=torch.float, device=device)
+    train_dataset = TensorDataset(X_train_t, y_train_t)
 
-    print("Loading heldout data...")
-    X_val_list = []
-    Y_val_list = []
+    # Validation data #####################################################
+    print("Loading validation data...")
+    VALIDATION_INPUT_PATH = '../data/esnli_dev.csv'
+    val_data = get_data(VALIDATION_INPUT_PATH)
 
-    # # now we iterate again to assign IDs - Validation
-    # with open(input_path_validation) as fin:
-    #     for line in fin:
-    #         y, sep, text = line.partition("\t")
-    #         token_list = text.split(" ")
-    #         tokenid_list = [word_to_id.get(token, 2) for token in token_list]
-    #         X_val_list.append(tokenid_list)
-    #
-    #         # extract the normalized [0,1] value for the aspect
-    #         y = [float(v) for v in y.split()]
-    #         Y_val_list.append(y[aspect])
-    #
-    # X_val_both = pad_sequences(X_val_list, max_len=maxlen)
-    # Y_val_both = np.asarray(Y_val_list)
+    # tokenize using nltk word tokenizer
+    tokenized_sentence = nltk_word_tokenize(val_data['sentences'])
 
-    # this cell loads the word embeddings from the external data
-    embeddings_index = {}
-    with open("data/review+wiki.filtered.200.txt") as f:
+    # now we iterate again to assign IDs -
+    X_val_list, y_val_list = [], []
+
+    for token_list in tokenized_sentence:
+        token_id_list = [word_to_id.get(token, 2) for token in token_list]
+        X_val_list.append(token_id_list)
+
+    y_val_list = [label_to_id[label] for label in val_data['labels']]
+
+    X_val = pad_sequences(X_val_list, max_len=maxlen)
+    y_val = np.asarray(y_val_list)
+
+    # Test data ###########################################################
+    print("Loading test data...")
+    TEST_INPUT_PATH = '../data/esnli_test.csv'
+    test_data = get_data(TEST_INPUT_PATH)
+
+    # tokenize using nltk word tokenizer
+    tokenized_sentence = nltk_word_tokenize(test_data['sentences'])
+
+    # now we iterate again to assign IDs -
+    X_test_list, y_test_list = [], []
+
+    for token_list in tokenized_sentence:
+        token_id_list = [word_to_id.get(token, 2) for token in token_list]
+        X_test_list.append(token_id_list)
+
+    y_test_list = [label_to_id[label] for label in test_data['labels']]
+
+    X_test = pad_sequences(X_test_list, max_len=maxlen)
+    y_test = np.asarray(y_test_list)
+
+    # GloVe ###############################################################
+    # create word_vec with glove vectors
+    GLOVE_PATH = '../data/GloVe/glove.42B.300d .txt'
+    word_vec = {}
+    with open(GLOVE_PATH) as f:
         for line in f:
-            values = line.split()
-            word = values[0]
-            coefs = np.asarray(values[1:], dtype='float32')
-            embeddings_index[word] = coefs
+            word, vec = line.split(' ', 1)
+            if word in word_to_id:
+                word_vec[word] = np.array(list(map(float, vec.split())))
+    print('Found %s word vectors.' % len(word_vec))
 
-    print('Found %s word vectors.' % len(embeddings_index))
-
-    embedding_matrix = np.zeros((len(word_to_id) + 1, embedding_dims))
+    GLOVE_DIM = 300
+    embedding_matrix = np.zeros((len(word_to_id) + 1, GLOVE_DIM))
     for word, i in word_to_id.items():
-        embedding_vector = embeddings_index.get(word)
+        embedding_vector = word_vec.get(word)
         if embedding_vector is not None:
             # words not found in embedding index will be all-zeros.
             embedding_matrix[i] = embedding_vector
+            
+    embedding_matrix_t = torch.tensor(embedding_matrix, dtype=torch.float, requires_grad=False, device=device)
 
     print('Creating model...')
 
-    val_mse_lst = []
-    test_mse_lst = []
+    val_loss_lst = []
+    test_loss_lst = []
     subset_precision_lst = []
 
-    embedding_matrix_t = torch.tensor(embedding_matrix, dtype=torch.float, requires_grad=False, device=device)
-
-    loss_function = torch.nn.MSELoss()
-    loss_function_nored = torch.nn.MSELoss(reduction='none')
+    # Cross Entropy as loss with ignoring <PAD> (ignore_index=0)
+    loss_function = torch.nn.CrossEntropyLoss(ignore_index=0)
+    # loss_function_nored = torch.nn.CrossEntropyLoss(ignore_index=0, reduction='none')
 
     # here we can now iterate a few times to compute statistics
     for seed in range(args.reruns):
-        wandb.init(project="beeradv-l2x", name=f'{method_name}-{seed}')
+        wandb.init(project="esnli-l2x", name=f'{method_name}-{seed}')
 
         wandb.config.update(args)
         wandb.config.update({'hostname': hostname, 'seed': seed})
 
         set_seed(seed, is_deterministic=True)
-
-        # create a new validation/test split
-        X_val, X_test, Y_val, Y_test = train_test_split(X_val_both, Y_val_both, test_size=0.5, random_state=seed)
 
         print('Initialising the model ..')
 
@@ -271,7 +302,8 @@ def main():
             imle_output_temp = args.imle_output_temperature
             imle_lambda = args.imle_lambda
 
-            target_distribution = TargetDistribution(alpha=1.0, beta=imle_lambda, do_gradient_scaling=args.gradient_scaling)
+            target_distribution = TargetDistribution(alpha=1.0, beta=imle_lambda,
+                                                     do_gradient_scaling=args.gradient_scaling)
             noise_distribution = name_to_distribution(args.imle_noise)
 
             @imle(target_distribution=target_distribution, noise_distribution=noise_distribution, nb_samples=nb_samples,
@@ -359,7 +391,7 @@ def main():
         optimizer = optim.Adam(model.parameters(), lr=0.001, eps=1e-7)
 
         st = time.time()
-        best_val_mse = None
+        best_val_loss = None
 
         for epoch_no in range(1, epochs + 1):
             epoch_loss_values = []
@@ -383,11 +415,12 @@ def main():
 
                 # XXX About the loss values, remember we should sum over S and aggregate over B
                 assert nb_samples > 0
-                if nb_samples == 1:
-                    loss = loss_function(p, y)
-                else:
-                    loss = loss_function_nored(p, y)
-                    loss = loss.view(-1, nb_samples).sum(axis=1).mean(axis=0)
+                # if nb_samples == 1:
+                #     loss = loss_function(p, y)
+                # else:
+                #     loss = loss_function_nored(p, y)
+                #     loss = loss.view(-1, nb_samples).sum(axis=1).mean(axis=0)
+                loss = loss_function(p, y)
 
                 loss_value = loss.item()
 
@@ -404,15 +437,15 @@ def main():
             logger.info(f'Epoch {epoch_no}/{epochs}\tLoss {loss_mean:.4f} ± {loss_std:.4f}')
 
             # Checkpointing
-            val_mse = evaluate(model, X_val, Y_val, device=device)
-            test_mse = evaluate(model, X_test, Y_test, device=device)
+            val_loss = evaluate(model, X_val, y_val, device=device)
+            test_loss = evaluate(model, X_test, y_test, device=device)
 
-            if best_val_mse is None or val_mse <= best_val_mse:
-                print(f'Saving new checkpoint -- new best validation MSE: {val_mse:.5f}')
+            if best_val_loss is None or val_loss <= best_val_loss:
+                print(f'Saving new checkpoint -- new best validation MSE: {val_loss:.5f}')
                 torch.save({'model_state_dict': model.state_dict()}, checkpoint_path)
-                best_val_mse = val_mse
+                best_val_mse = val_loss
 
-            wandb.log({'seed': seed, 'val_mse': val_mse, 'test_mse': test_mse, 'loss_mean': loss_mean}, step=epoch_no)
+            wandb.log({'seed': seed, 'val_loss': val_loss, 'test_loss': test_loss, 'loss_mean': loss_mean}, step=epoch_no)
 
         duration = time.time() - st
         print(f'[{seed}] Training time is {duration} ms')
@@ -422,26 +455,26 @@ def main():
             checkpoint = torch.load(checkpoint_path)
             model.load_state_dict(checkpoint['model_state_dict'])
 
-        val_mse = evaluate(model, X_val, Y_val, device=device) * 100.0
-        print(f"[{seed}] Validation MSE: {val_mse:.5f}")
-        val_mse_lst += [val_mse]
+        val_mse = evaluate(model, X_val, y_val, device=device) * 100.0
+        print(f"[{seed}] Validation Loss: {val_mse:.5f}")
+        val_loss_lst += [val_mse]
 
-        test_mse = evaluate(model, X_test, Y_test, device=device) * 100.0
-        print(f"[{seed}] Test MSE: {test_mse:.5f}")
-        test_mse_lst += [test_mse]
+        test_mse = evaluate(model, X_test, y_test, device=device) * 100.0
+        print(f"[{seed}] Test Loss: {test_mse:.5f}")
+        test_loss_lst += [test_mse]
 
         subset_prec = subset_precision(model, aspect, id_to_word, word_to_id, select_k,
                                        device=device, max_len=maxlen) * 100.0
         print(f"[{seed}] Subset precision: {subset_prec:.5f}")
         subset_precision_lst += [subset_prec]
 
-        wandb.log({'best_val_mse': val_mse, 'best_test_mse': test_mse, 'best_subset_prec': subset_prec})
+        wandb.log({'best_val_loss': val_mse, 'best_test_loss': test_mse, 'best_subset_prec': subset_prec})
 
         wandb.finish()
 
     print(f'Final Subset Precision List: {np.mean(subset_precision_lst):.5f} ± {np.std(subset_precision_lst):.5f}')
-    print(f'Final Validation MSE List: {np.mean(val_mse_lst):.5f} ± {np.std(val_mse_lst):.5f}')
-    print(f'Final Test MSE List: {np.mean(test_mse_lst):.5f} ± {np.std(test_mse_lst):.5f}')
+    print(f'Final Validation Loss List: {np.mean(val_loss_lst):.5f} ± {np.std(val_loss_lst):.5f}')
+    print(f'Final Test Loss List: {np.mean(test_loss_lst):.5f} ± {np.std(test_loss_lst):.5f}')
 
     if os.path.exists(checkpoint_path):
         os.remove(checkpoint_path)
@@ -450,7 +483,5 @@ def main():
 
 
 if __name__ == '__main__':
-    # logging.basicConfig(stream=sys.stdout, level=logging.INFO)
-    # main(sys.argv[1:])
-
-    main()
+    logging.basicConfig(stream=sys.stdout, level=logging.INFO)
+    main(sys.argv[1:])
