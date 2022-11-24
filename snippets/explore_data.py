@@ -58,7 +58,7 @@ def get_data(file_dir):
     return {'sentence': {'merged': sentence,
                          'premise': premise,
                          'hypothesis': hypothesis},
-            'labels': label,
+            'label': label,
             'highlight': {'merged': highlight,
                           'premise': premise_highlight_idx,
                           'hypothesis': hypothesis_highlight_idx}}

@@ -177,7 +177,7 @@ def main(argv):
     # get words from ids
     id_to_word = {value: key for key, value in word_to_id.items()}
 
-    # labels
+    # label
     label_to_id = {'entailment': 2, 'neutral': 1, 'contradiction': 0}
     id_to_label = {value: key for key, value in label_to_id.items()}
 
@@ -190,7 +190,7 @@ def main(argv):
         token_id_list = [word_to_id[token] for token in token_list]
         X_train_list.append(token_id_list)
 
-    y_train_list = [label_to_id[label] for label in train_data['labels']]
+    y_train_list = [label_to_id[label] for label in train_data['label']]
 
     X_train = pad_sequences(X_train_list, max_len=maxlen)
     y_train = np.asarray(y_train_list)
@@ -214,7 +214,7 @@ def main(argv):
         token_id_list = [word_to_id.get(token, 2) for token in token_list]
         X_val_list.append(token_id_list)
 
-    y_val_list = [label_to_id[label] for label in val_data['labels']]
+    y_val_list = [label_to_id[label] for label in val_data['label']]
 
     X_val = pad_sequences(X_val_list, max_len=maxlen)
     y_val = np.asarray(y_val_list)
@@ -234,7 +234,7 @@ def main(argv):
         token_id_list = [word_to_id.get(token, 2) for token in token_list]
         X_test_list.append(token_id_list)
 
-    y_test_list = [label_to_id[label] for label in test_data['labels']]
+    y_test_list = [label_to_id[label] for label in test_data['label']]
 
     X_test = pad_sequences(X_test_list, max_len=maxlen)
     y_test = np.asarray(y_test_list)
