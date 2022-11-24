@@ -13,42 +13,41 @@ def get_data(file_dir):
     premise, hypothesis, sentence, label, premise_highlight_idx, hypothesis_highlight_idx, highlight = [], [], [], [], [], [], []
     for row in rows:
         s1, s2 = row['Sentence1'], row['Sentence2']
-        s = s1 + ' ' + s2
-        l = row['gold_label']
+        sentence_merged = s1 + ' ' + s2
 
         premise_marked, hypothesis_marked = row['Sentence1_marked_1'], row['Sentence2_marked_1']
-        premise_marked_split, hypothesis_marked_split = premise_marked.split(), hypothesis_marked.split()
-        sentence_marked = premise_marked_split + hypothesis_marked_split
+        sentence_marked = premise_marked + premise_marked
 
-        # l1, l2 = len(highlighted_premise.split('*')) // 2, len(highlighted_hypothesis.split('*')) // 2
-        #
-        # premise_highlights = [highlighted_premise.split('*')[2 * i + 1] for i in range(l1)]
-        # hypothesis_highlights = [highlighted_hypothesis.split('*')[2 * i + 1] for i in range(l2)]
-        # highlight = premise_highlights + hypothesis_highlights
-        # # we remove punctuations from highlights - otherwise subset precision would be wrong
-        # for i, h in enumerate(highlight):
-        #     temp = h.split('.')
-        #     if len(h.split('.')) != 1:
-        #         highlight = h.split('.')[0]
-        #     elif len(h.split(',')) != 1:
-        #         highlight = h.split(',')[0]
+        lbl = row['gold_label']
 
         s1_highlight, s2_highlight = [], []
+        # for i, s in enumerate(premise_marked.split()):
+        #     if len(s.split('*')) != 1:
+        #         s1_highlight.append(i)
+        #
+        # for i, s in enumerate(hypothesis_marked.split()):
+        #     if len(s.split('*')) != 1:
+        #         s2_highlight.append(i)
+
         for i, s in enumerate(premise_marked.split()):
-            temp = s.split('*')
             if len(s.split('*')) != 1:
                 s1_highlight.append(i)
+                temp = s.split('*')[1]
+                if len(temp.split(',')) != 1:
+                    i = i + 1
 
         for i, s in enumerate(hypothesis_marked.split()):
-            temp = s.split('*')
             if len(s.split('*')) != 1:
                 s2_highlight.append(i)
+                temp = s.split('*')[1]
+                if len(temp.split(',')) != 1:
+                    i = i + 1
 
         premise.append(s1)
         hypothesis.append(s2)
-        sentence.append(s)
+        sentence.append(sentence_merged)
 
-        label.append(l)
+        label.append(lbl)
 
         premise_highlight_idx.append(s1_highlight)
         hypothesis_highlight_idx.append(s2_highlight)
@@ -74,6 +73,6 @@ def nltk_word_tokenize(input_list):
 
 
 # # get data dictionary
-# TRAIN_INPUT_PATH = '../data/esnli_test.csv'
-# train_data = get_data(TRAIN_INPUT_PATH)
-# print('Done')
+TRAIN_INPUT_PATH = '../data/esnli_test.csv'
+train_data = get_data(TRAIN_INPUT_PATH)
+print('Done')
