@@ -465,7 +465,7 @@ def main(argv):
         print(f"[{seed}] Test Loss: {test_loss:.5f}")
         test_loss_lst += [test_loss]
 
-        subset_prec = subset_precision_esnli(model, aspect, id_to_word, word_to_id, select_k,device=device, max_len=maxlen)*100
+        subset_prec = subset_precision_esnli(model, test_data, id_to_word, word_to_id, select_k,device=device, max_len=maxlen)*100
         print(f"[{seed}] Subset precision: {subset_prec:.5f}")
         subset_precision_lst += [subset_prec]
 
