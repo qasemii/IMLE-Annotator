@@ -16,33 +16,45 @@ def get_data(file_dir):
         sentence_merged = s1 + ' ' + s2
 
         premise_marked, hypothesis_marked = row['Sentence1_marked_1'], row['Sentence2_marked_1']
-        sentence_marked = premise_marked + premise_marked
+        sentence_marked = premise_marked + ' ' + hypothesis_marked
 
         lbl = row['gold_label']
 
-        s1_highlight, s2_highlight = [], []
+        s1_highlight, s2_highlight, s_highlight = [], [], []
 
         s1_tokens = word_tokenize(premise_marked)
         s2_tokens = word_tokenize(hypothesis_marked)
+        s_tokens = word_tokenize(sentence_marked)
+        # # getting highlights for premise
+        # j = 0
+        # h_detected = False
+        # for i, w in enumerate(s1_tokens):
+        #     if w == '*' and not h_detected:
+        #         s1_highlight.append(j)
+        #         h_detected = True
+        #     elif w == '*' and h_detected:
+        #         h_detected = False
+        #     else:
+        #         j = j + 1
+        #
+        # # getting highlights for hypothesise
+        # j = 0
+        # h_detected = False
+        # for i, w in enumerate(s2_tokens):
+        #     if w == '*' and not h_detected:
+        #         s2_highlight.append(j)
+        #         h_detected = True
+        #     elif w == '*' and h_detected:
+        #         h_detected = False
+        #     else:
+        #         j = j + 1
 
-        # getting highlights for premise
+        # getting highlights for merged sentence
         j = 0
         h_detected = False
-        for i, w in enumerate(s1_tokens):
+        for i, w in enumerate(s_tokens):
             if w == '*' and not h_detected:
-                s1_highlight.append(j)
-                h_detected = True
-            elif w == '*' and h_detected:
-                h_detected = False
-            else:
-                j = j + 1
-
-        # getting highlights for hypothesise
-        j = 0
-        h_detected = False
-        for i, w in enumerate(s2_tokens):
-            if w == '*' and not h_detected:
-                s2_highlight.append(j)
+                s_highlight.append(j)
                 h_detected = True
             elif w == '*' and h_detected:
                 h_detected = False
@@ -58,11 +70,11 @@ def get_data(file_dir):
         premise_highlight_idx.append(s1_highlight)
         hypothesis_highlight_idx.append(s2_highlight)
 
-        x = s1_highlight + [h + len(word_tokenize(s1)) for h in s2_highlight]
+        # x = s1_highlight + [h + len(word_tokenize(s1)) for h in s2_highlight]
         # temp = word_tokenize(sentence_merged)
         # for i in x:
         #     ttt = temp[i]
-        highlight.append(x)
+        highlight.append(s_highlight)
 
     return {'sentence': {'merged': sentence,
                          'premise': premise,
