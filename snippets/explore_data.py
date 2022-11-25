@@ -28,20 +28,26 @@ def get_data(file_dir):
         # for i, s in enumerate(hypothesis_marked.split()):
         #     if len(s.split('*')) != 1:
         #         s2_highlight.append(i)
-
+        j = 0
         for i, s in enumerate(premise_marked.split()):
             if len(s.split('*')) != 1:
-                s1_highlight.append(i)
+                s1_highlight.append(j)
                 temp = s.split('*')[1]
                 if len(temp.split(',')) != 1:
-                    i = i + 1
+                    j = j + 1
+            elif len(s.split(',')) != 1:
+                j = j + 1
+            j = j + 1
 
         for i, s in enumerate(hypothesis_marked.split()):
             if len(s.split('*')) != 1:
-                s2_highlight.append(i)
+                s2_highlight.append(j)
                 temp = s.split('*')[1]
                 if len(temp.split(',')) != 1:
-                    i = i + 1
+                    j = j + 1
+            elif len(s.split(',')) != 1:
+                j = j + 1
+            j = j + 1
 
         premise.append(s1)
         hypothesis.append(s2)
@@ -53,6 +59,9 @@ def get_data(file_dir):
         hypothesis_highlight_idx.append(s2_highlight)
 
         h = s1_highlight + [h + len(word_tokenize(s1)) for h in s2_highlight]
+        temp = word_tokenize(sentence_merged)
+        for i in h:
+            ttt = temp[i]
         highlight.append(h)
 
     return {'sentence': {'merged': sentence,
@@ -73,6 +82,6 @@ def nltk_word_tokenize(input_list):
 
 
 # # get data dictionary
-# TRAIN_INPUT_PATH = '../data/esnli_test.csv'
-# train_data = get_data(TRAIN_INPUT_PATH)
-# print('Done')
+TRAIN_INPUT_PATH = '../data/esnli_test.csv'
+train_data = get_data(TRAIN_INPUT_PATH)
+print('Done')
