@@ -150,12 +150,11 @@ def subset_precision_esnli(model, data, id_to_word, word_to_id, select_k, device
                 if i in highlights_idx:
                     # correct selected words
                     correct_selected_counter = correct_selected_counter + 1
-                    # text_list[i] = '\hlc[purple!30]{' + text_list[i] + '}'
+                    text_list[i] = '\hlc[purple!30]{' + text_list[i] + '}'
                     highlights_idx.remove(i)
                 else:
                     # wrong selected words
-                    # text_list[i] = '\hlc[red!60]{' + text_list[i] + '}'
-                    pass
+                    text_list[i] = '\hlc[red!60]{' + text_list[i] + '}'
                 # exclude explored words
                 selected_words[i] = '<PAD>'
 

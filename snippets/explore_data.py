@@ -21,34 +21,33 @@ def get_data(file_dir):
         lbl = row['gold_label']
 
         s1_highlight, s2_highlight = [], []
-        # for i, s in enumerate(premise_marked.split()):
-        #     if len(s.split('*')) != 1:
-        #         s1_highlight.append(i)
-        #
-        # for i, s in enumerate(hypothesis_marked.split()):
-        #     if len(s.split('*')) != 1:
-        #         s2_highlight.append(i)
-        j = 0
-        for i, s in enumerate(premise_marked.split()):
-            if len(s.split('*')) != 1:
-                s1_highlight.append(j)
-                temp = s.split('*')[1]
-                if len(temp.split(',')) != 1:
-                    j = j + 1
-            elif len(s.split(',')) != 1:
-                j = j + 1
-            j = j + 1
 
+        s1_tokens = word_tokenize(premise_marked)
+        s2_tokens = word_tokenize(hypothesis_marked)
+
+        # getting highlights for premise
         j = 0
-        for i, s in enumerate(hypothesis_marked.split()):
-            if len(s.split('*')) != 1:
-                s2_highlight.append(j)
-                temp = s.split('*')[1]
-                if len(temp.split(',')) != 1:
-                    j = j + 1
-            elif len(s.split(',')) != 1:
+        h_detected = False
+        for i, w in enumerate(s1_tokens):
+            if w == '*' and not h_detected:
+                s1_highlight.append(j)
+                h_detected = True
+            elif w == '*' and h_detected:
+                h_detected = False
+            else:
                 j = j + 1
-            j = j + 1
+
+        # getting highlights for hypothesise
+        j = 0
+        h_detected = False
+        for i, w in enumerate(s2_tokens):
+            if w == '*' and not h_detected:
+                s2_highlight.append(j)
+                h_detected = True
+            elif w == '*' and h_detected:
+                h_detected = False
+            else:
+                j = j + 1
 
         premise.append(s1)
         hypothesis.append(s2)
@@ -83,4 +82,7 @@ def nltk_word_tokenize(input_list):
 
 
 if __name__ == '__main__':
-    pass
+    TEST_INPUT_PATH = '../data/esnli_test.csv'
+    get_data(TEST_INPUT_PATH)
+    print('Done')
+
