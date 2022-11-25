@@ -82,6 +82,6 @@ def nltk_word_tokenize(input_list):
 
 
 # # get data dictionary
-TRAIN_INPUT_PATH = '../data/esnli_test.csv'
-train_data = get_data(TRAIN_INPUT_PATH)
-print('Done')
+# TRAIN_INPUT_PATH = '../data/esnli_test.csv'
+# train_data = get_data(TRAIN_INPUT_PATH)
+# print('Done')
