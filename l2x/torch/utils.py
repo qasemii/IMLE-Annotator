@@ -177,7 +177,4 @@ def subset_precision_esnli(model, data, id_to_word, word_to_id, select_k, device
 
 
 if __name__ == '__main__':
-    # # get data dictionary
-    TRAIN_INPUT_PATH = '../data/esnli_train_1.csv'
-    train_data = subset_precision_esnli(TRAIN_INPUT_PATH)
-    print('Done')
+    pass
