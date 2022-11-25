@@ -39,6 +39,7 @@ def get_data(file_dir):
                 j = j + 1
             j = j + 1
 
+        j = 0
         for i, s in enumerate(hypothesis_marked.split()):
             if len(s.split('*')) != 1:
                 s2_highlight.append(j)
@@ -58,11 +59,11 @@ def get_data(file_dir):
         premise_highlight_idx.append(s1_highlight)
         hypothesis_highlight_idx.append(s2_highlight)
 
-        h = s1_highlight + [h + len(word_tokenize(s1)) for h in s2_highlight]
+        x = s1_highlight + [h + len(word_tokenize(s1)) for h in s2_highlight]
         temp = word_tokenize(sentence_merged)
-        for i in h:
+        for i in x:
             ttt = temp[i]
-        highlight.append(h)
+        highlight.append(x)
 
     return {'sentence': {'merged': sentence,
                          'premise': premise,
