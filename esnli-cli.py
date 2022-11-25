@@ -192,8 +192,9 @@ def main(argv):
 
     y_train_list = [label_to_id[label] for label in train_data['label']]
 
-    X_train_list = X_train_list[:40000]
-    y_train_list = y_train_list[:40000]
+    # # select smaller dataset
+    # X_train_list = X_train_list[:40000]
+    # y_train_list = y_train_list[:40000]
 
     X_train = pad_sequences(X_train_list, max_len=maxlen)
     y_train = np.asarray(y_train_list)
