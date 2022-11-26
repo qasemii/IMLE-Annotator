@@ -163,7 +163,7 @@ def subset_precision_esnli(model, data, id_to_word, word_to_id, select_k, device
             text_list[i] = '\hlc[cyan!30]{' + text_list[i] + '}'
             selected_words[i] = '<PAD>'
 
-        label = data['label']
+        label = data['label'][anotr]
         marked_highlights_list.append(' '.join(text_list) + ' - ' + f'(\\textbf{label}' + '\\\\')
 
         # we make sure that we select at least 10 non-padding words
