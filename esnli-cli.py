@@ -87,7 +87,6 @@ def main(argv):
     parser = argparse.ArgumentParser('PyTorch I-MLE/BeerAdvocate',
                                      formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
-    parser.add_argument('--aspect', '-a', action='store', type=int, default=1, help='Aspect')
     parser.add_argument('--epochs', '-e', action='store', type=int, default=20, help='Epochs')
     parser.add_argument('--batch-size', '-b', action='store', type=int, default=40, help='Batch Size')
     parser.add_argument('--kernel-size', '-k', action='store', type=int, default=3, help='Kernel Size')
@@ -151,9 +150,13 @@ def main(argv):
     select_k = args.select_k  # Number of selected words by the methods
     checkpoint_path = args.checkpoint
 
-    # tokenize using nltk word tokenizer
-    nltk.download('punkt')
-
+    # Downloadign nltk punkt
+    try:
+        nltk.data.find('tokenizers/punkt')
+        print('nltk has been already installed.')
+    except LookupError:
+        nltk.download('punkt')
+        
     # get data dictionary
     TRAIN_INPUT_PATH = 'data/esnli_train_1.csv'
     train_data = get_data(TRAIN_INPUT_PATH)
