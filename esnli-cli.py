@@ -276,6 +276,8 @@ def main(argv):
     loss_function = torch.nn.CrossEntropyLoss()
     # loss_function_nored = torch.nn.CrossEntropyLoss(reduction='none')
 
+    highlight_loss_function = torch.nn.BCELoss()
+
     # here we can now iterate a few times to compute statistics
     for seed in range(args.reruns):
         wandb.init(project="esnli-l2x", name=f'{method_name}-{seed}')
@@ -436,7 +438,7 @@ def main(argv):
                 true_token_mask = torch.zeros_like(selected_token_mask)
                 true_token_mask[true_highlight_idx] = 1
 
-                highlights_loss = loss_function(true_token_mask, selected_token_mask)
+                highlights_loss = highlight_loss_function(true_token_mask, selected_token_mask)
                 highlights_loss_value = highlights_loss.item() #################################
 
                 loss_value = loss.item()
