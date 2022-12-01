@@ -132,18 +132,19 @@ def subset_precision_esnli(model, data, id_to_word, word_to_id, select_k, device
         with torch.inference_mode():
             model.eval()
             prediction = model.z(X_test_subset_t)
-
+        print(prediction)
         x_val_selected = prediction[0].cpu().numpy() * X_test_subset
-
+        print(x_val_selected)
         # [L,]
         selected_words = np.vectorize(id_to_word.get)(x_val_selected)[0][-review_length:]
+        print(selected_words)
+        assert False
         selected_nonpadding_word_counter = 0
 
         premise_highlights = data['highlight']['premise'][anotr]
         hypothesis_highlights = data['highlight']['hypothesis'][anotr]
 
         highlights_idx = data['highlight']['merged'][anotr]
-        selected_highlights = []
         for i, w in enumerate(selected_words):
             if w != '<PAD>':  # we are nice to the L2X approach by only considering selected non-pad tokens
                 selected_nonpadding_word_counter = selected_nonpadding_word_counter + 1
@@ -163,6 +164,12 @@ def subset_precision_esnli(model, data, id_to_word, word_to_id, select_k, device
             text_list[i] = '\hlc[cyan!30]{' + text_list[i] + '}'
             selected_words[i] = '<PAD>'
 
+        true_highlight = torch.zeros(len(tokenized_sentence))
+        selected_highlight = torch.zeros(len(tokenized_sentence))
+
+        # true_highlight[highlights_idx] = 1
+        # selected_highlight[] = 1
+
         # add gold labels at the end of the reviews
         label = data['label'][anotr]
         marked_highlights_list.append(' '.join(text_list) + ' \\textbf{' + label + '}\\\\')
@@ -174,7 +181,7 @@ def subset_precision_esnli(model, data, id_to_word, word_to_id, select_k, device
     with open("highlights.txt", "w") as f:
         f.write('\n\n'.join(marked_highlights_list))
 
-    return correct_selected_counter/selected_word_counter
+    return correct_selected_counter / selected_word_counter
 
 
 if __name__ == '__main__':
