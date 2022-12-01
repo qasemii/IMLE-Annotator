@@ -42,16 +42,6 @@ import logging
 
 logger = logging.getLogger(os.path.basename(sys.argv[0]))
 
-
-#############################################################
-# util functions ############################################
-#############################################################
-
-
-#############################################################
-#############################################################
-#############################################################
-
 class DifferentiableSelectKModel(torch.nn.Module):
     def __init__(self,
                  diff_fun: Callable[[Tensor], Tensor],
@@ -87,16 +77,16 @@ def main(argv):
     parser = argparse.ArgumentParser('PyTorch I-MLE/BeerAdvocate',
                                      formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
-    parser.add_argument('--epochs', '-e', action='store', type=int, default=20, help='Epochs')
+    parser.add_argument('--epochs', '-e', action='store', type=int, default=5, help='Epochs')
     parser.add_argument('--batch-size', '-b', action='store', type=int, default=40, help='Batch Size')
     parser.add_argument('--kernel-size', '-k', action='store', type=int, default=3, help='Kernel Size')
     parser.add_argument('--hidden-dims', '-H', action='store', type=int, default=250, help='Hidden Dimensions')
     parser.add_argument('--max-len', '-m', action='store', type=int, default=350, help='Maximum Sequence Length')
-    parser.add_argument('--select-k', '-K', action='store', type=int, default=10, help='Select K')
+    parser.add_argument('--select-k', '-K', action='store', type=int, default=5, help='Select K')
     parser.add_argument('--highlight', action='store', default=False, help='Involving Highlights in Training')
 
     parser.add_argument("--checkpoint", "-c", action='store', type=str, default='models/model.pt')
-    parser.add_argument("--reruns", "-r", action='store', type=int, default=10)
+    parser.add_argument("--reruns", "-r", action='store', type=int, default=1)
     parser.add_argument("--method", "-M", type=str, choices=['sst', 'imle', 'imletopk', 'aimle', 'ste', 'softsub'],
                         default='imle', help="Method (SST, IMLE, AIMLE, STE, SoftSub)")
 
@@ -135,6 +125,8 @@ def main(argv):
     device = torch.device('cpu')
     if torch.cuda.is_available():
         device = torch.device('cuda')
+    elif torch.backends.mps.is_available():
+        device = torch.device('mps')
     print(f'Device: {device}')
 
     # Set parameters:
@@ -151,7 +143,7 @@ def main(argv):
     involve_highlights = args.highlight
     checkpoint_path = args.checkpoint
 
-    # Downloadign nltk punkt
+    # Downloading nltk punkt
     try:
         nltk.data.find('tokenizers/punkt')
         print('NLTK has been already installed')
@@ -254,6 +246,8 @@ def main(argv):
     print('Loading GloVe ...')
     # create word_vec with glove vectors
     GLOVE_PATH = '/content/gdrive/MyDrive/glove.42B.300d.txt'
+    # GLOVE_PATH = '../data/GloVe/glove.42B.300d.txt'
+
     word_vec = {}
     with open(GLOVE_PATH) as f:
         for line in f:
@@ -434,19 +428,21 @@ def main(argv):
                 #     loss = loss.view(-1, nb_samples).sum(axis=1).mean(axis=0)
                 loss = loss_function(p, y)
 
-                if involve_highlights:
-                    # mask for machine selected tokens
-                    selected_token_mask = model.z(x=X)[0]
+                # mask for machine selected tokens #############################################
+                selected_token_mask = model.z(x=X)[0]
 
-                    # mask for human selected tokens
-                    true_highlight_idx = train_data['highlight']['merged'][i]
-                    true_token_mask = torch.zeros_like(selected_token_mask)
-                    true_token_mask[true_highlight_idx] = 1
+                # mask for human selected tokens
+                true_highlight_idx = train_data['highlight']['merged'][i]
+                true_token_mask = torch.zeros_like(selected_token_mask)
+                true_token_mask[true_highlight_idx] = 1
 
-                    highlights_loss = loss_function(true_token_mask, selected_token_mask)
-                    highlights_loss_value = highlights_loss.item()
+                highlights_loss = loss_function(true_token_mask, selected_token_mask)
+                highlights_loss_value = highlights_loss.item() #################################
 
                 loss_value = loss.item()
+
+                if involve_highlights:
+                    loss = loss + highlights_loss
 
                 if args.debug is True:
                     logger.info(f'Epoch {epoch_no}/{epochs}\tIteration {i + 1}\tLoss value: {loss_value:.4f}\tHighlight loss: {highlights_loss_value:.4f}')
