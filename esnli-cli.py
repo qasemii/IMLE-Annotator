@@ -154,8 +154,9 @@ def main(argv):
     # Downloadign nltk punkt
     try:
         nltk.data.find('tokenizers/punkt')
-        print('nltk has been already installed.')
+        print('NLTK has been already installed')
     except LookupError:
+        print('Downloading NLTK punkt package ...')
         nltk.download('punkt')
 
     # get data dictionary
