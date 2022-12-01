@@ -116,8 +116,8 @@ def main(argv):
 
     args = parser.parse_args(argv)
 
-    # if args.debug is True:
-    #     torch.autograd.set_detect_anomaly(True)
+    if args.debug is True:
+        torch.autograd.set_detect_anomaly(True)
 
     hostname = socket.gethostname()
     print(f'Hostname: {hostname}')
@@ -402,7 +402,7 @@ def main(argv):
         best_val_loss = None
 
         for epoch_no in range(1, epochs + 1):
-            epoch_loss_values = []
+            epoch_loss_values, epoch_highlights_loss = [], []
 
             for i, (X, y) in enumerate(train_loader):
                 # Used for unit tests
@@ -450,13 +450,15 @@ def main(argv):
                     logger.info(f'Epoch {epoch_no}/{epochs}\tIteration {i + 1}\tLoss value: {loss_value:.4f}\tHighlight loss: {highlights_loss_value:.4f}')
 
                 epoch_loss_values += [loss_value]
+                epoch_highlights_loss += [highlights_loss_value]
 
                 loss.backward()
                 optimizer.step()
                 optimizer.zero_grad()
 
             loss_mean, loss_std = np.mean(epoch_loss_values), np.std(epoch_loss_values)
-            logger.info(f'Epoch {epoch_no}/{epochs}\tLoss {loss_mean:.4f} ± {loss_std:.4f}')
+            highlights_loss_mean, highlights_loss_std = np.mean(epoch_highlights_loss), np.std(epoch_highlights_loss)
+            logger.info(f'Epoch {epoch_no}/{epochs}\tLoss {loss_mean:.4f} ± {loss_std:.4f}\tHighlight Loss {highlights_loss_mean:.4f} ± {highlights_loss_std:.4f}')
 
             # Checkpointing
             val_loss = evaluate(model, X_val, y_val, device=device)
