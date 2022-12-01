@@ -435,14 +435,21 @@ def main(argv):
                 loss = loss_function(p, y)
 
                 if involve_highlights:
-                    # highlights = model.z(x=X)
-                    # highlghts_loss = loss_function()
-                    pass
+                    # mask for machine selected tokens
+                    selected_token_mask = model.z(x=X)[0]
+
+                    # mask for human selected tokens
+                    true_highlight_idx = train_data['highlight']['merged'][i]
+                    true_token_mask = torch.zeros_like(selected_token_mask)
+                    true_token_mask[true_highlight_idx] = 1
+
+                    highlights_loss = loss_function(true_token_mask, selected_token_mask)
+                    highlights_loss_value = highlights_loss.item()
 
                 loss_value = loss.item()
 
                 if args.debug is True:
-                    logger.info(f'Epoch {epoch_no}/{epochs}\tIteration {i + 1}\tLoss value: {loss_value:.4f}')
+                    logger.info(f'Epoch {epoch_no}/{epochs}\tIteration {i + 1}\tLoss value: {loss_value:.4f}\tHighlight loss: {highlights_loss_value:.4f}')
 
                 epoch_loss_values += [loss_value]
 
