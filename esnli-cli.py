@@ -116,8 +116,8 @@ def main(argv):
 
     args = parser.parse_args(argv)
 
-    if args.debug is True:
-        torch.autograd.set_detect_anomaly(True)
+    # if args.debug is True:
+    #     torch.autograd.set_detect_anomaly(True)
 
     hostname = socket.gethostname()
     print(f'Hostname: {hostname}')
