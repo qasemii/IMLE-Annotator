@@ -165,6 +165,7 @@ def main(argv):
     tokenized_sentence = nltk_word_tokenize(train_data['sentence']['merged'])
 
     # the dictionary mapping words to their IDs
+    print('Preparing Token Lists ...')
     word_to_id = dict()
     token_id_counter = 3
     for token_list in tokenized_sentence:
