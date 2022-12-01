@@ -93,7 +93,7 @@ def main(argv):
     parser.add_argument('--hidden-dims', '-H', action='store', type=int, default=250, help='Hidden Dimensions')
     parser.add_argument('--max-len', '-m', action='store', type=int, default=350, help='Maximum Sequence Length')
     parser.add_argument('--select-k', '-K', action='store', type=int, default=10, help='Select K')
-    parser.add_argument('--highlights', '-h', action='store', type=int, default=False, help='Involving Highlights in Training')
+    parser.add_argument('--highlight', '-h', action='store', default=False, help='Involving Highlights in Training')
 
     parser.add_argument("--checkpoint", "-c", action='store', type=str, default='models/model.pt')
     parser.add_argument("--reruns", "-r", action='store', type=int, default=10)

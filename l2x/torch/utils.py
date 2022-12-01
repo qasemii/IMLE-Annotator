@@ -163,6 +163,7 @@ def subset_precision_esnli(model, data, id_to_word, word_to_id, select_k, device
             text_list[i] = '\hlc[cyan!30]{' + text_list[i] + '}'
             selected_words[i] = '<PAD>'
 
+        # add gold labels at the end of the reviews
         label = data['label'][anotr]
         marked_highlights_list.append(' '.join(text_list) + ' \\textbf{' + label + '}\\\\')
 
@@ -173,7 +174,7 @@ def subset_precision_esnli(model, data, id_to_word, word_to_id, select_k, device
     with open("highlights.txt", "w") as f:
         f.write('\n\n'.join(marked_highlights_list))
 
-    return correct_selected_counter / selected_word_counter
+    return correct_selected_counter/selected_word_counter
 
 
 if __name__ == '__main__':
