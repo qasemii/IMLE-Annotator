@@ -429,35 +429,37 @@ def main(argv):
                 #     loss = loss_function_nored(p, y)
                 #     loss = loss.view(-1, nb_samples).sum(axis=1).mean(axis=0)
                 loss = loss_function(p, y)
+                loss_value = loss.item()
 
                 # # mask for machine selected tokens #############################################
-                # selected_token_mask = model.z(x=X)[0]
-                #
-                # # mask for human selected tokens
-                # true_highlight_idx = train_data['highlight']['merged'][i]
-                # true_token_mask = torch.zeros_like(selected_token_mask)
-                # true_token_mask[true_highlight_idx] = 1
-                #
-                # highlights_loss = highlight_loss_function(true_token_mask, selected_token_mask)
-                # highlights_loss_value = highlights_loss.item() #################################
+                selected_token_mask = model.z(x=X)[0]
+
+                # mask for human selected tokens
+                true_highlight_idx = train_data['highlight']['merged'][i]
+                true_token_mask = torch.zeros_like(selected_token_mask)
+                true_token_mask[true_highlight_idx] = 1
+
+                highlights_loss = highlight_loss_function(true_token_mask, selected_token_mask)
+                highlights_loss_value = highlights_loss.item()
+                ##################################################################################
 
                 # if involve_highlights:
                 #     loss = loss + highlights_loss
+                loss = loss + highlights_loss
 
-                loss_value = loss.item()
 
                 if args.debug is True:
                     logger.info(f'Epoch {epoch_no}/{epochs}\tIteration {i + 1}\tLoss value: {loss_value:.4f}')
 
                 epoch_loss_values += [loss_value]
-                # epoch_highlights_loss += [highlights_loss_value]
+                epoch_highlights_loss += [highlights_loss_value]
 
                 loss.backward()
                 optimizer.step()
                 optimizer.zero_grad()
 
             loss_mean, loss_std = np.mean(epoch_loss_values), np.std(epoch_loss_values)
-            highlights_loss_mean, highlights_loss_std = np.mean(epoch_highlights_loss), np.std(epoch_highlights_loss)
+            # highlights_loss_mean, highlights_loss_std = np.mean(epoch_highlights_loss), np.std(epoch_highlights_loss)
             logger.info(f'Epoch {epoch_no}/{epochs}\tLoss {loss_mean:.4f} ± {loss_std:.4f}')
             # '\tHighlight Loss: {highlights_loss_mean: .4f} ± {highlights_loss_std: .4f}'
 
