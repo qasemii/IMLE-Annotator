@@ -132,11 +132,14 @@ def subset_precision_esnli(model, data, id_to_word, word_to_id, select_k, device
         with torch.inference_mode():
             model.eval()
             prediction = model.z(X_test_subset_t)
+        print('prediction')
         print(prediction)
         x_val_selected = prediction[0].cpu().numpy() * X_test_subset
+        print('x_val_selected')
         print(x_val_selected)
         # [L,]
         selected_words = np.vectorize(id_to_word.get)(x_val_selected)[0][-review_length:]
+        print('selected_word')
         print(selected_words)
         assert False
         selected_nonpadding_word_counter = 0

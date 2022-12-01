@@ -160,9 +160,11 @@ def main(argv):
         nltk.download('punkt')
 
     # get data dictionary
+    print("Loading Train Data...")
     TRAIN_INPUT_PATH = 'data/esnli_train_1.csv'
     train_data = get_data(TRAIN_INPUT_PATH)
 
+    print('Tokenizing input sentences ...')
     tokenized_sentence = nltk_word_tokenize(train_data['sentence']['merged'])
 
     # the dictionary mapping words to their IDs
@@ -188,7 +190,6 @@ def main(argv):
     id_to_label = {value: key for key, value in label_to_id.items()}
 
     # Train data #########################################################
-    print("Loading Train Data...")
     X_train_list, y_train_list = [], []
 
     # now we iterate again to assign IDs - Train
