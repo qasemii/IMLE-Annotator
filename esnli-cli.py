@@ -186,7 +186,7 @@ def main(argv):
     id_to_label = {value: key for key, value in label_to_id.items()}
 
     # Train data #########################################################
-    print("Loading train data...")
+    print("Loading Train Data...")
     X_train_list, y_train_list = [], []
 
     # now we iterate again to assign IDs - Train
@@ -208,7 +208,7 @@ def main(argv):
     train_dataset = TensorDataset(X_train_t, y_train_t)
 
     # Validation data #####################################################
-    print("Loading validation data...")
+    print("Loading Validation Data...")
     VALIDATION_INPUT_PATH = 'data/esnli_dev.csv'
     val_data = get_data(VALIDATION_INPUT_PATH)
 
@@ -228,7 +228,7 @@ def main(argv):
     y_val = np.asarray(y_val_list)
 
     # Test data ###########################################################
-    print("Loading test data...")
+    print("Loading Test Data...")
     TEST_INPUT_PATH = 'data/esnli_test.csv'
     test_data = get_data(TEST_INPUT_PATH)
 
@@ -257,7 +257,7 @@ def main(argv):
             word, vec = line.split(' ', 1)
             if word in word_to_id:
                 word_vec[word] = np.array(list(map(float, vec.split())))
-    print('Found %s word vectors.' % len(word_vec))
+    # print('Found %s word vectors.' % len(word_vec))
 
     embedding_matrix = np.zeros((len(word_to_id) + 1, embedding_dims))
     for word, i in word_to_id.items():
@@ -432,10 +432,9 @@ def main(argv):
                 loss = loss_function(p, y)
 
                 if involve_highlights:
-                    highlights = model.z(x=X)
-
-
-                    highlghts_loss = loss_function()
+                    # highlights = model.z(x=X)
+                    # highlghts_loss = loss_function()
+                    pass
 
                 loss_value = loss.item()
 
