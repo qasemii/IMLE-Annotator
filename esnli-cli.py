@@ -93,6 +93,7 @@ def main(argv):
     parser.add_argument('--hidden-dims', '-H', action='store', type=int, default=250, help='Hidden Dimensions')
     parser.add_argument('--max-len', '-m', action='store', type=int, default=350, help='Maximum Sequence Length')
     parser.add_argument('--select-k', '-K', action='store', type=int, default=10, help='Select K')
+    parser.add_argument('--highlights', '-h', action='store', type=int, default=False, help='Involving Highlights in Training')
 
     parser.add_argument("--checkpoint", "-c", action='store', type=str, default='models/model.pt')
     parser.add_argument("--reruns", "-r", action='store', type=int, default=10)
@@ -148,6 +149,7 @@ def main(argv):
     hidden_dims = args.hidden_dims
     epochs = args.epochs
     select_k = args.select_k  # Number of selected words by the methods
+    involve_highlights = args.highlight
     checkpoint_path = args.checkpoint
 
     # Downloadign nltk punkt
@@ -156,7 +158,7 @@ def main(argv):
         print('nltk has been already installed.')
     except LookupError:
         nltk.download('punkt')
-        
+
     # get data dictionary
     TRAIN_INPUT_PATH = 'data/esnli_train_1.csv'
     train_data = get_data(TRAIN_INPUT_PATH)
@@ -429,6 +431,12 @@ def main(argv):
                 #     loss = loss_function_nored(p, y)
                 #     loss = loss.view(-1, nb_samples).sum(axis=1).mean(axis=0)
                 loss = loss_function(p, y)
+
+                if involve_highlights:
+                    highlights = model.z(x=X)
+
+
+                    highlghts_loss = loss_function()
 
                 loss_value = loss.item()
 
