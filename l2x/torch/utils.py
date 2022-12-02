@@ -5,6 +5,9 @@ import json
 import numpy as np
 import random
 
+import matplotlib.pyplot as plt
+import seaborn as sns
+
 import torch
 from torch import nn, Tensor
 from torch.distributions.gamma import Gamma
@@ -36,6 +39,13 @@ def set_seed(seed: int, is_deterministic: bool = True):
             torch.backends.cudnn.deterministic = True
             torch.backends.cudnn.benchmark = False
     return
+
+
+def plot_stats(data, title):
+    plt.figure(figsize=(20, 8))
+    sns.countplot(x=[token for token in data if token != '<PAD>'])
+    plt.title(f'{title}', size=15)
+    plt.show()
 
 
 def subset_precision(model, aspect, id_to_word, word_to_id, select_k, device: torch.device, max_len: int = 350):
@@ -117,6 +127,8 @@ def subset_precision_esnli(model, data, id_to_word, word_to_id, select_k, device
 
     marked_highlights_list = []
 
+    entailment_dist, contradiction_dist, neutral_dist = [], [], []
+
     selected_word_counter, correct_selected_counter = 0, 0
     for anotr in range(len(tokenized_sentence)):
         text_list = tokenized_sentence[anotr]
@@ -136,6 +148,7 @@ def subset_precision_esnli(model, data, id_to_word, word_to_id, select_k, device
         x_val_selected = prediction[0].cpu().numpy() * X_test_subset
         # [L,]
         selected_words = np.vectorize(id_to_word.get)(x_val_selected)[0][-review_length:]
+        selected_nonpadding_word = []
         selected_nonpadding_word_counter = 0
 
         # premise_highlights = data['highlight']['premise'][anotr]
@@ -144,6 +157,7 @@ def subset_precision_esnli(model, data, id_to_word, word_to_id, select_k, device
         highlights_idx = data['highlight']['merged'][anotr]
         for i, w in enumerate(selected_words):
             if w != '<PAD>':  # we are nice to the L2X approach by only considering selected non-pad tokens
+                selected_nonpadding_word.append(w)
                 selected_nonpadding_word_counter = selected_nonpadding_word_counter + 1
                 if i in highlights_idx:
                     # correct selected words
@@ -161,8 +175,14 @@ def subset_precision_esnli(model, data, id_to_word, word_to_id, select_k, device
             text_list[i] = '\hlc[cyan!30]{' + text_list[i] + '}'
             selected_words[i] = '<PAD>'
 
-        # add gold labels at the end of the reviews
         label = data['label'][anotr]
+        if label == 'entailment':
+            entailment_dist += selected_nonpadding_word
+        elif label == 'neutral':
+            neutral_dist += selected_nonpadding_word
+        else:
+            contradiction_dist += selected_nonpadding_word
+
         marked_highlights_list.append(' '.join(text_list) + ' \\textbf{' + label + '}\\\\')
 
         # we make sure that we select at least 10 non-padding words
@@ -171,6 +191,8 @@ def subset_precision_esnli(model, data, id_to_word, word_to_id, select_k, device
 
     with open("highlights.txt", "w") as f:
         f.write('\n\n'.join(marked_highlights_list))
+
+    plot_stats(entailment_dist, 'Entailment')
 
     return correct_selected_counter / selected_word_counter
 
