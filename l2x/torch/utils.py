@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import json
+import pickle
 
 import numpy as np
 import random
@@ -41,7 +42,7 @@ def set_seed(seed: int, is_deterministic: bool = True):
     return
 
 
-def plot_stats(data, title):
+def plot_stats(data, title='Plot'):
     plt.figure(figsize=(20, 8))
     sns.countplot(x=[token for token in data if token != '<PAD>'])
     plt.title(f'{title}', size=15)
@@ -192,10 +193,16 @@ def subset_precision_esnli(model, data, id_to_word, word_to_id, select_k, device
     with open("highlights.txt", "w") as f:
         f.write('\n\n'.join(marked_highlights_list))
 
-    plot_stats(entailment_dist, 'Entailment')
+    # plot_stats(entailment_dist, 'Entailment')
+
+    stats = {'entailment': entailment_dist, 'neutral': neutral_dist, 'contradiction': contradiction_dist}
+    with open('statistics.pkl', 'wb') as file:
+        pickle.dump(stats, file)
 
     return correct_selected_counter / selected_word_counter
 
 
 if __name__ == '__main__':
-    pass
+    test = ['test', 'test', 'tttt']
+    plot_stats(test, 'funck')
+
