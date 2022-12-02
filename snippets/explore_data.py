@@ -66,6 +66,6 @@ def nltk_word_tokenize(input_list):
 
 if __name__ == '__main__':
     TEST_INPUT_PATH = '../data/esnli_test.csv'
-    get_data(TEST_INPUT_PATH)
+    data = get_data(TEST_INPUT_PATH)
     print('Done')
 
