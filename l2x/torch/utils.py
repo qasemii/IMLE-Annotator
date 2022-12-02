@@ -203,6 +203,5 @@ def subset_precision_esnli(model, data, id_to_word, word_to_id, select_k, device
 
 
 if __name__ == '__main__':
-    test = ['test', 'test', 'tttt']
-    plot_stats(test, 'funck')
+    pass
 
