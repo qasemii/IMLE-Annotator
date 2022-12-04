@@ -126,7 +126,7 @@ def subset_precision_esnli(model, data, id_to_word, word_to_id, select_k, device
     # tokenize using nltk word tokenizer
     tokenized_sentence = data['sentence']['merged']
 
-    marked_highlights_list = []g
+    marked_highlights_list = []
     entailment_dist, contradiction_dist, neutral_dist = [], [], []
 
     selected_word_counter, correct_selected_counter = 0, 0
