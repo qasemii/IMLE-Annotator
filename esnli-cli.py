@@ -9,6 +9,8 @@ import numpy as np
 
 import argparse
 
+import pickle
+
 import torch
 
 import nltk
@@ -153,11 +155,10 @@ def main(argv):
 
     # get data dictionary
     print("Loading Train Data...")
-    TRAIN_INPUT_PATH = 'data/esnli_train_1.csv'
-    train_data = get_data(TRAIN_INPUT_PATH)
-
-    print('Tokenizing input sentences ...')
-    tokenized_sentence = nltk_word_tokenize(train_data['sentence']['merged'])
+    TRAIN_INPUT_PATH = '../data/eSNLI/esnli_test_preprocessed.pkl'
+    with open(TRAIN_INPUT_PATH, 'rb') as file:
+        train_data = pickle.load(file)
+    tokenized_sentence = train_data['sentence']['merged']
 
     # the dictionary mapping words to their IDs
     print('Preparing Token Lists ...')
@@ -204,11 +205,10 @@ def main(argv):
 
     # Validation data #####################################################
     print("Loading Validation Data...")
-    VALIDATION_INPUT_PATH = 'data/esnli_dev.csv'
-    val_data = get_data(VALIDATION_INPUT_PATH)
-
-    # tokenize using nltk word tokenizer
-    tokenized_sentence = nltk_word_tokenize(val_data['sentence']['merged'])
+    VALIDATION_INPUT_PATH = '../data/eSNLI/esnli_val_preprocessed.pkl'
+    with open(VALIDATION_INPUT_PATH, 'rb') as file:
+        val_data = pickle.load(file)
+    tokenized_sentence = val_data['sentence']['merged']
 
     # now we iterate again to assign IDs -
     X_val_list, y_val_list = [], []
@@ -224,11 +224,10 @@ def main(argv):
 
     # Test data ###########################################################
     print("Loading Test Data...")
-    TEST_INPUT_PATH = 'data/esnli_test.csv'
-    test_data = get_data(TEST_INPUT_PATH)
-
-    # tokenize using nltk word tokenizer
-    tokenized_sentence = nltk_word_tokenize(test_data['sentence']['merged'])
+    TEST_INPUT_PATH = '../data/eSNLI/esnli_test_preprocessed.pkl'
+    with open(TEST_INPUT_PATH, 'rb') as file:
+        test_data = pickle.load(file)
+    tokenized_sentence = test_data['sentence']['merged']
 
     # now we iterate again to assign IDs -
     X_test_list, y_test_list = [], []
