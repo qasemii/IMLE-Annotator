@@ -155,7 +155,7 @@ def main(argv):
 
     # get data dictionary
     print("Loading Train Data...")
-    TRAIN_INPUT_PATH = '../data/eSNLI/esnli_test_preprocessed.pkl'
+    TRAIN_INPUT_PATH = 'data/eSNLI/esnli_test_preprocessed.pkl'
     with open(TRAIN_INPUT_PATH, 'rb') as file:
         train_data = pickle.load(file)
     tokenized_sentence = train_data['sentence']['merged']
@@ -205,7 +205,7 @@ def main(argv):
 
     # Validation data #####################################################
     print("Loading Validation Data...")
-    VALIDATION_INPUT_PATH = '../data/eSNLI/esnli_val_preprocessed.pkl'
+    VALIDATION_INPUT_PATH = 'data/eSNLI/esnli_val_preprocessed.pkl'
     with open(VALIDATION_INPUT_PATH, 'rb') as file:
         val_data = pickle.load(file)
     tokenized_sentence = val_data['sentence']['merged']
@@ -224,7 +224,7 @@ def main(argv):
 
     # Test data ###########################################################
     print("Loading Test Data...")
-    TEST_INPUT_PATH = '../data/eSNLI/esnli_test_preprocessed.pkl'
+    TEST_INPUT_PATH = 'data/eSNLI/esnli_test_preprocessed.pkl'
     with open(TEST_INPUT_PATH, 'rb') as file:
         test_data = pickle.load(file)
     tokenized_sentence = test_data['sentence']['merged']
