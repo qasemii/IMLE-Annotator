@@ -1,4 +1,5 @@
 import csv
+import pickle
 from nltk.tokenize import word_tokenize
 
 
@@ -65,7 +66,30 @@ def nltk_word_tokenize(input_list):
 
 
 if __name__ == '__main__':
-    TEST_INPUT_PATH = '../data/esnli_test.csv'
-    data = get_data(TEST_INPUT_PATH)
-    print('Done')
+    # TRAIN_INPUT_PATH = '../data/esnli_train_1.csv'
+    # train_data = get_data(TRAIN_INPUT_PATH)
+    # train_tokenized = nltk_word_tokenize(train_data['sentence']['merged'])
+    # train_data['sentence']['merged'] = train_tokenized
+    #
+    # with open('../data/eSNLI/esnli_train_preprocessed.pkl', 'wb') as file:
+    #     pickle.dump(train_data, file)
+    #
+    # VALIDATION_INPUT_PATH = '../data/esnli_dev.csv'
+    # val_data = get_data(VALIDATION_INPUT_PATH)
+    # val_tokenized = nltk_word_tokenize(val_data['sentence']['merged'])
+    # val_data['sentence']['merged'] = val_tokenized
+    # with open('../data/eSNLI/esnli_val_preprocessed.pkl', 'wb') as file:
+    #     pickle.dump(val_data, file)
+    #
+    # TEST_INPUT_PATH = '../data/esnli_test.csv'
+    # test_data = get_data(TEST_INPUT_PATH)
+    # test_tokenized = nltk_word_tokenize(test_data['sentence']['merged'])
+    # test_data['sentence']['merged'] = test_tokenized
+    # with open('../data/eSNLI/esnli_test_preprocessed.pkl', 'wb') as file:
+    #     pickle.dump(test_data, file)
 
+    PATH = '../data/eSNLI/esnli_test_preprocessed.pkl'
+    with open(PATH, 'rb') as file:
+        stats = pickle.load(file)
+
+    pass
