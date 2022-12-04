@@ -444,7 +444,6 @@ def main(argv):
                     loss = loss + highlights_loss
                 ##################################################################################
 
-
                 loss_value = loss.item()
                 if args.debug is True:
                     logger.info(f'Epoch {epoch_no}/{epochs}\tIteration {i + 1}\tLoss value: {loss_value:.4f}')

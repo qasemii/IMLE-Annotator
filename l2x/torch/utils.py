@@ -124,10 +124,9 @@ def subset_precision(model, aspect, id_to_word, word_to_id, select_k, device: to
 
 def subset_precision_esnli(model, data, id_to_word, word_to_id, select_k, device: torch.device, max_len: int = 350):
     # tokenize using nltk word tokenizer
-    tokenized_sentence = nltk_word_tokenize(data['sentence']['merged'])
+    tokenized_sentence = data['sentence']['merged']
 
-    marked_highlights_list = []
-
+    marked_highlights_list = []g
     entailment_dist, contradiction_dist, neutral_dist = [], [], []
 
     selected_word_counter, correct_selected_counter = 0, 0
