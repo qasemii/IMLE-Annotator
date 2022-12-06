@@ -148,7 +148,7 @@ def subset_precision_esnli(model, data, id_to_word, word_to_id, select_k, device
             model.eval()
             prediction = model.z(X_test_subset_t)
             label_score = model(X_test_subset_t)
-            predicted_idx = torch.argmax(label_score, dim=1)
+            predicted_idx = torch.argmax(label_score, dim=1).tolist()
             predicted_label = [id_to_label[i] for i in predicted_idx]
 
 
@@ -188,7 +188,7 @@ def subset_precision_esnli(model, data, id_to_word, word_to_id, select_k, device
         else:
             label = '\hlc[red!60]{' + label + '}'
 
-            
+
 
         if label == 'entailment':
             entailment_dist += selected_nonpadding_word
