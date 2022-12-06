@@ -429,18 +429,18 @@ def main(argv):
                 loss = loss_function(p, y)
 
                 # mask for machine selected tokens #############################################
-                selected_token_mask = model.z(x=X)[0]
-
-                # mask for human selected tokens
-                true_highlight_idx = train_data['highlight']['merged'][i]
-                true_token_mask = torch.zeros_like(selected_token_mask)
-                true_token_mask[true_highlight_idx] = 1
-
-                highlights_loss = highlight_loss_function(true_token_mask, selected_token_mask)
-                highlights_loss_value = highlights_loss.item()
-
-                # if involve_highlights:
-                loss = loss + highlights_loss
+                # selected_token_mask = model.z(x=X)[0]
+                #
+                # # mask for human selected tokens
+                # true_highlight_idx = train_data['highlight']['merged'][i]
+                # true_token_mask = torch.zeros_like(selected_token_mask)
+                # true_token_mask[true_highlight_idx] = 1
+                #
+                # highlights_loss = highlight_loss_function(true_token_mask, selected_token_mask)
+                # highlights_loss_value = highlights_loss.item()
+                #
+                # # if involve_highlights:
+                # loss = loss + highlights_loss
                 ##################################################################################
 
                 loss_value = loss.item()
