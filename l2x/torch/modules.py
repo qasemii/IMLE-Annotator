@@ -188,11 +188,11 @@ class PredictionModel(torch.nn.Module):
         self.layer_1 = nn.Linear(in_features=self.embedding_dim, out_features=self.hidden_dims, bias=True)
         init(self.layer_1)
 
-        self.layer_2 = nn.Linear(in_features=self.hidden_dims, out_features=1, bias=True)
+        self.layer_2 = nn.Linear(in_features=self.hidden_dims, out_features=3, bias=True)
         init(self.layer_2)
 
         self.activation = nn.ReLU()
-        self.output_activation = nn.Sigmoid()
+        self.output_activation = nn.Softmax()
 
     def forward(self,
                 x: Tensor,
@@ -244,8 +244,7 @@ class Model(torch.nn.Module):
             token_selections = self.differentiable_select_k(token_logits)
         return token_selections
 
-    def forward(self,
-                x: Tensor) -> Tensor:
+    def forward(self, x: Tensor) -> Tensor:
         # [B, T]
         token_selections = self.z(x)
         # [B, T, 1]
