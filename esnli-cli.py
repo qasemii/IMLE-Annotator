@@ -91,7 +91,7 @@ def evaluate_accuracy(model_eval: Model,
         model_eval.eval()
         p_eval_lst = []
         for X, y in eval_loader:
-            p_eval_lst += model_eval(x=X).view(-1).tolist()
+            p_eval_lst += model_eval(x=X).tolist()
         p_eval_t = torch.tensor(p_eval_lst, dtype=torch.float, requires_grad=False, device=device)
         print('prediction', p_eval_t)
         print('labels', y_eval_t)
@@ -151,8 +151,8 @@ def main(argv):
     device = torch.device('cpu')
     if torch.cuda.is_available():
         device = torch.device('cuda')
-    elif torch.backends.mps.is_available():
-        device = torch.device('mps')
+    # elif torch.backends.mps.is_available():
+    #     device = torch.device('mps')
     print(f'Device: {device}')
 
     # Set parameters:
@@ -223,7 +223,7 @@ def main(argv):
     y_train = np.asarray(y_train_list)
 
     X_train_t = torch.tensor(X_train, dtype=torch.long, device=device)
-    y_train_t = torch.tensor(y_train, dtype=torch.float, device=device)
+    y_train_t = torch.tensor(y_train, dtype=int, device=device)
     train_dataset = TensorDataset(X_train_t, y_train_t)
 
     # Validation data #####################################################
@@ -268,7 +268,7 @@ def main(argv):
     print('Loading GloVe ...')
     # create word_vec with glove vectors
     GLOVE_PATH = '/content/gdrive/MyDrive/glove.42B.300d.txt'
-    # GLOVE_PATH = '../data/GloVe/glove.42B.300d.txt'
+    # GLOVE_PATH = 'data/GloVe/glove.42B.300d.txt'
 
     word_vec = {}
     with open(GLOVE_PATH) as f:
@@ -432,24 +432,24 @@ def main(argv):
                     break
 
                 model.train()
-                p = model(x=X).view(-1)
+                p = model(x=X)
 
-                # Now, note that, while y is [B], p is [B * S], where S is the number of samples
-                # drawn by I-MLE during the forward pass. We may need to replicate y S times.
-                nb_samples = p.shape[0] // y.shape[0]
-                if p.shape[0] > y.shape[0]:
-                    assert method_name in {'imle', 'aimle'} and args.imle_samples > 1, "p.shape and y.shape differ"
-                    y = y.view(batch_size, 1)
-                    y = y.repeat(1, nb_samples)
-                    y = y.view(batch_size * nb_samples)
-
-                # XXX About the loss values, remember we should sum over S and aggregate over B
-                assert nb_samples > 0
-                # if nb_samples == 1:
-                #     loss = loss_function(p, y)
-                # else:
-                #     loss = loss_function_nored(p, y)
-                #     loss = loss.view(-1, nb_samples).sum(axis=1).mean(axis=0)
+                # # Now, note that, while y is [B], p is [B * S], where S is the number of samples
+                # # drawn by I-MLE during the forward pass. We may need to replicate y S times.
+                # nb_samples = p.shape[0] // y.shape[0]
+                # if p.shape[0] > y.shape[0]:
+                #     assert method_name in {'imle', 'aimle'} and args.imle_samples > 1, "p.shape and y.shape differ"
+                #     y = y.view(batch_size, 1)
+                #     y = y.repeat(1, nb_samples)
+                #     y = y.view(batch_size * nb_samples)
+                #
+                # # XXX About the loss values, remember we should sum over S and aggregate over B
+                # assert nb_samples > 0
+                # # if nb_samples == 1:
+                # #     loss = loss_function(p, y)
+                # # else:
+                # #     loss = loss_function_nored(p, y)
+                # #     loss = loss.view(-1, nb_samples).sum(axis=1).mean(axis=0)
                 loss = loss_function(p, y)
 
                 # mask for machine selected tokens #############################################
