@@ -65,14 +65,14 @@ def evaluate(model_eval: Model,
              device: torch.device) -> float:
     loss = torch.nn.CrossEntropyLoss()
     x_eval_t = torch.tensor(x_eval, dtype=torch.long, device=device)
-    y_eval_t = torch.tensor(y_eval, dtype=torch.float, device=device)
+    y_eval_t = torch.tensor(y_eval, dtype=int, device=device)
     eval_dataset = TensorDataset(x_eval_t, y_eval_t)
     eval_loader = DataLoader(eval_dataset, batch_size=100, shuffle=False)
     with torch.inference_mode():
         model_eval.eval()
         p_eval_lst = []
         for X, y in eval_loader:
-            p_eval_lst += model_eval(x=X).view(-1).tolist()
+            p_eval_lst += model_eval(x=X).tolist()
         p_eval_t = torch.tensor(p_eval_lst, dtype=torch.float, requires_grad=False, device=device)
         loss_value = loss(p_eval_t, y_eval_t)
     return loss_value.item()
@@ -84,7 +84,7 @@ def evaluate_accuracy(model_eval: Model,
                       device: torch.device) -> float:
     accuray = Accuracy(task="multiclass", num_classes=3).to(device)
     x_eval_t = torch.tensor(x_eval, dtype=torch.long, device=device)
-    y_eval_t = torch.tensor(y_eval, dtype=torch.float, device=device)
+    y_eval_t = torch.tensor(y_eval, dtype=int, device=device)
     eval_dataset = TensorDataset(x_eval_t, y_eval_t)
     eval_loader = DataLoader(eval_dataset, batch_size=100, shuffle=False)
     with torch.inference_mode():
