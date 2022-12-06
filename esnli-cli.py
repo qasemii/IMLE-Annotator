@@ -20,6 +20,8 @@ from torch import optim, Tensor
 from torch.utils.data import TensorDataset
 from torch.utils.data import DataLoader
 
+from torchmetrics import Accuracy
+
 from imle.imle import imle
 from imle.aimle import aimle
 from imle.ste import ste
@@ -43,6 +45,7 @@ import wandb
 import logging
 
 logger = logging.getLogger(os.path.basename(sys.argv[0]))
+
 
 class DifferentiableSelectKModel(torch.nn.Module):
     def __init__(self,
@@ -73,6 +76,25 @@ def evaluate(model_eval: Model,
         p_eval_t = torch.tensor(p_eval_lst, dtype=torch.float, requires_grad=False, device=device)
         loss_value = loss(p_eval_t, y_eval_t)
     return loss_value.item()
+
+
+def evaluate_accuracy(model_eval: Model,
+                      x_eval: np.ndarray,
+                      y_eval: np.ndarray,
+                      device: torch.device) -> float:
+    accuray = Accuracy(task="multiclass", num_classes=3)
+    x_eval_t = torch.tensor(x_eval, dtype=torch.long, device=device)
+    y_eval_t = torch.tensor(y_eval, dtype=torch.float, device=device)
+    eval_dataset = TensorDataset(x_eval_t, y_eval_t)
+    eval_loader = DataLoader(eval_dataset, batch_size=100, shuffle=False)
+    with torch.inference_mode():
+        model_eval.eval()
+        p_eval_lst = []
+        for X, y in eval_loader:
+            p_eval_lst += model_eval(x=X).view(-1).tolist()
+        p_eval_t = torch.tensor(p_eval_lst, dtype=torch.float, requires_grad=False, device=device)
+        accuray_value = accuray(p_eval_t, y_eval_t)
+    return accuray_value.item()
 
 
 def main(argv):
@@ -274,6 +296,8 @@ def main(argv):
     loss_function = torch.nn.CrossEntropyLoss()
     # loss_function_nored = torch.nn.CrossEntropyLoss(reduction='none')
 
+    acc_function = Accuracy(task="multiclass", num_classes=3)
+
     highlight_loss_function = torch.nn.BCELoss()
 
     # here we can now iterate a few times to compute statistics
@@ -400,7 +424,7 @@ def main(argv):
         best_val_loss = None
 
         for epoch_no in range(1, epochs + 1):
-            epoch_loss_values, epoch_highlights_loss = [], []
+            epoch_loss_values, epoch_highlights_loss, epoch_accuracy_values = [], [], []
 
             for i, (X, y) in enumerate(train_loader):
                 # Used for unit tests
@@ -427,6 +451,7 @@ def main(argv):
                 #     loss = loss_function_nored(p, y)
                 #     loss = loss.view(-1, nb_samples).sum(axis=1).mean(axis=0)
                 loss = loss_function(p, y)
+                accuracy = acc_function(p,y)
 
                 # mask for machine selected tokens #############################################
                 # selected_token_mask = model.z(x=X)[0]
@@ -450,21 +475,28 @@ def main(argv):
                 epoch_loss_values += [loss_value]
                 # epoch_highlights_loss += [highlights_loss_value]
 
+                acc_value = accuracy.item()
+                epoch_accuracy_values += [acc_value]
+
                 loss.backward()
                 optimizer.step()
                 optimizer.zero_grad()
 
             loss_mean, loss_std = np.mean(epoch_loss_values), np.std(epoch_loss_values)
             # highlights_loss_mean, highlights_loss_std = np.mean(epoch_highlights_loss), np.std(epoch_highlights_loss)
-            logger.info(f'Epoch {epoch_no}/{epochs}\tLoss {loss_mean:.4f} ± {loss_std:.4f}')
+            accuracy_mean = np.mean(epoch_accuracy_values)
+            logger.info(f'Epoch {epoch_no}/{epochs}\tLoss {loss_mean:.4f} ± {loss_std:.4f} - Accuracy {accuracy_mean:.4f}')
             # '\tHighlight Loss: {highlights_loss_mean: .4f} ± {highlights_loss_std: .4f}'
 
             # Checkpointing
             val_loss = evaluate(model, X_val, y_val, device=device)
             test_loss = evaluate(model, X_test, y_test, device=device)
 
+            val_accuracy = evaluate_accuracy(model, X_val, y_val, device=device)
+            test_accuracy = evaluate_accuracy(model, X_test, y_test, device=device)
+
             if best_val_loss is None or val_loss <= best_val_loss:
-                print(f'Saving new checkpoint -- new best validation Loss: {val_loss:.5f}')
+                print(f'Saving new checkpoint -- new best validation Loss: {val_loss:.5f} - Accuracy: {val_accuracy:.5f}')
                 torch.save({'model_state_dict': model.state_dict()}, checkpoint_path)
                 best_val_loss = val_loss
 
@@ -487,7 +519,8 @@ def main(argv):
         print(f"[{seed}] Test Loss: {test_loss:.5f}")
         test_loss_lst += [test_loss]
 
-        subset_prec = subset_precision_esnli(model, test_data, id_to_word, word_to_id, select_k,device=device, max_len=maxlen)*100
+        subset_prec = subset_precision_esnli(model, test_data, id_to_word, word_to_id, select_k, device=device,
+                                             max_len=maxlen) * 100
         print(f"[{seed}] Subset precision: {subset_prec:.5f}")
         subset_precision_lst += [subset_prec]
 
