@@ -93,8 +93,6 @@ def evaluate_accuracy(model_eval: Model,
         for X, y in eval_loader:
             p_eval_lst += model_eval(x=X).tolist()
         p_eval_t = torch.tensor(p_eval_lst, dtype=torch.float, requires_grad=False, device=device)
-        print('prediction', p_eval_t)
-        print('labels', y_eval_t)
         accuray_value = accuray(p_eval_t, y_eval_t)
     return accuray_value.item()
 
