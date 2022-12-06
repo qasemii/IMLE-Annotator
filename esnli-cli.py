@@ -296,7 +296,7 @@ def main(argv):
     loss_function = torch.nn.CrossEntropyLoss()
     # loss_function_nored = torch.nn.CrossEntropyLoss(reduction='none')
 
-    acc_function = Accuracy(task="multiclass", num_classes=3)
+    acc_function = Accuracy(task="multiclass", num_classes=3).to(device)
 
     highlight_loss_function = torch.nn.BCELoss()
 
@@ -451,7 +451,7 @@ def main(argv):
                 #     loss = loss_function_nored(p, y)
                 #     loss = loss.view(-1, nb_samples).sum(axis=1).mean(axis=0)
                 loss = loss_function(p, y)
-                accuracy = acc_function(p,y)
+                accuracy = acc_function(p, y)
 
                 # mask for machine selected tokens #############################################
                 # selected_token_mask = model.z(x=X)[0]
