@@ -147,6 +147,7 @@ def subset_precision_esnli(model, data, id_to_word, word_to_id, select_k, device
         with torch.inference_mode():
             model.eval()
             prediction = model.z(X_test_subset_t)
+
             label_score = model(X_test_subset_t)
             predicted_idx = torch.argmax(label_score, dim=1).tolist()
             predicted_label = [id_to_label[i] for i in predicted_idx]
@@ -183,7 +184,7 @@ def subset_precision_esnli(model, data, id_to_word, word_to_id, select_k, device
             selected_words[i] = '<PAD>'
 
         label = data['label'][anotr]
-        if label == predicted_label[anotr]:
+        if label == predicted_label[0]:
             label = '\hlc[green!60]{' +label + '}'
         else:
             label = '\hlc[red!60]{' + label + '}'
