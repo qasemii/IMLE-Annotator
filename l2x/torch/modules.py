@@ -211,7 +211,6 @@ class PredictionModel(torch.nn.Module):
         # [B, 1]
         res = self.layer_2(res)
         res = self.output_activation(res)
-        res = torch.argmax(res)
         return res
 
 
