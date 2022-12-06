@@ -298,8 +298,6 @@ def main(argv):
     loss_function = torch.nn.CrossEntropyLoss()
     # loss_function_nored = torch.nn.CrossEntropyLoss(reduction='none')
 
-    acc_function = Accuracy(task="multiclass", num_classes=3).to(device)
-
     highlight_loss_function = torch.nn.BCELoss()
 
     # here we can now iterate a few times to compute statistics
@@ -426,7 +424,7 @@ def main(argv):
         best_val_loss = None
 
         for epoch_no in range(1, epochs + 1):
-            epoch_loss_values, epoch_highlights_loss, epoch_accuracy_values = [], [], []
+            epoch_loss_values, epoch_highlights_loss = [], []
 
             for i, (X, y) in enumerate(train_loader):
                 # Used for unit tests
@@ -453,9 +451,6 @@ def main(argv):
                 #     loss = loss_function_nored(p, y)
                 #     loss = loss.view(-1, nb_samples).sum(axis=1).mean(axis=0)
                 loss = loss_function(p, y)
-                print('train prediction', p)
-                print('train labels', y)
-                accuracy = acc_function(p, y)
 
                 # mask for machine selected tokens #############################################
                 # selected_token_mask = model.z(x=X)[0]
@@ -477,10 +472,7 @@ def main(argv):
                     logger.info(f'Epoch {epoch_no}/{epochs}\tIteration {i + 1}\tLoss value: {loss_value:.4f}')
 
                 epoch_loss_values += [loss_value]
-                # epoch_highlights_loss += [highlights_loss_value]
-
-                acc_value = accuracy.item()
-                epoch_accuracy_values += [acc_value]
+                # epoch_highlights_loss += [highlights_loss_
 
                 loss.backward()
                 optimizer.step()
@@ -488,8 +480,7 @@ def main(argv):
 
             loss_mean, loss_std = np.mean(epoch_loss_values), np.std(epoch_loss_values)
             # highlights_loss_mean, highlights_loss_std = np.mean(epoch_highlights_loss), np.std(epoch_highlights_loss)
-            accuracy_mean = np.mean(epoch_accuracy_values)
-            logger.info(f'Epoch {epoch_no}/{epochs}\tLoss {loss_mean:.4f} ± {loss_std:.4f} - Accuracy {accuracy_mean:.4f}')
+            logger.info(f'Epoch {epoch_no}/{epochs}\tLoss {loss_mean:.4f} ± {loss_std:.4f}')
             # '\tHighlight Loss: {highlights_loss_mean: .4f} ± {highlights_loss_std: .4f}'
 
             # Checkpointing
