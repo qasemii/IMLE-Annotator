@@ -82,7 +82,7 @@ def evaluate_accuracy(model_eval: Model,
                       x_eval: np.ndarray,
                       y_eval: np.ndarray,
                       device: torch.device) -> float:
-    accuray = Accuracy(task="multiclass", num_classes=3)
+    accuray = Accuracy(task="multiclass", num_classes=3).to(device)
     x_eval_t = torch.tensor(x_eval, dtype=torch.long, device=device)
     y_eval_t = torch.tensor(y_eval, dtype=torch.float, device=device)
     eval_dataset = TensorDataset(x_eval_t, y_eval_t)
