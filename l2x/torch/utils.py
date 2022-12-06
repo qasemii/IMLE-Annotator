@@ -185,9 +185,9 @@ def subset_precision_esnli(model, data, id_to_word, word_to_id, select_k, device
 
         label = data['label'][anotr]
         if label == predicted_label[0]:
-            label = '\hlc[green!60]{' + label + '}'
+            label = ' \\textbf{\hlc[green!60]{' + label + '}}\\\\'
         else:
-            label = '\hlc[maroon!60]{' + label + '}'
+            label = ' \\textbf{\hlc[maroon!60]{' + label + '}}\\\\'
 
 
 
@@ -198,7 +198,7 @@ def subset_precision_esnli(model, data, id_to_word, word_to_id, select_k, device
         else:
             contradiction_dist += selected_nonpadding_word
 
-        marked_highlights_list.append(' '.join(text_list) + ' \\textbf{' + label + '}\\\\')
+        marked_highlights_list.append(' '.join(text_list) + label)
 
         # we make sure that we select at least 10 non-padding words
         # if we have more than select_k non-padding words selected, we allow it but count that in
