@@ -129,6 +129,9 @@ def subset_precision_esnli(model, data, id_to_word, word_to_id, select_k, device
     marked_highlights_list = []
     entailment_dist, contradiction_dist, neutral_dist = [], [], []
 
+    label_to_id = {'entailment': 2, 'neutral': 1, 'contradiction': 0}
+    id_to_label = {value: key for key, value in label_to_id.items()}
+
     selected_word_counter, correct_selected_counter = 0, 0
     for anotr in range(len(tokenized_sentence)):
         text_list = tokenized_sentence[anotr]
@@ -144,6 +147,10 @@ def subset_precision_esnli(model, data, id_to_word, word_to_id, select_k, device
         with torch.inference_mode():
             model.eval()
             prediction = model.z(X_test_subset_t)
+            label_score = model(X_test_subset_t)
+            predicted_idx = torch.argmax(label_score, dim=1)
+            predicted_label = [id_to_label[i] for i in predicted_idx]
+
 
         x_val_selected = prediction[0].cpu().numpy() * X_test_subset
         # [L,]
@@ -176,6 +183,13 @@ def subset_precision_esnli(model, data, id_to_word, word_to_id, select_k, device
             selected_words[i] = '<PAD>'
 
         label = data['label'][anotr]
+        if label == predicted_label[anotr]:
+            label = '\hlc[green!60]{' +label + '}'
+        else:
+            label = '\hlc[red!60]{' + label + '}'
+
+            
+
         if label == 'entailment':
             entailment_dist += selected_nonpadding_word
         elif label == 'neutral':
