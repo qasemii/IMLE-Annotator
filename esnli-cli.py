@@ -93,6 +93,8 @@ def evaluate_accuracy(model_eval: Model,
         for X, y in eval_loader:
             p_eval_lst += model_eval(x=X).view(-1).tolist()
         p_eval_t = torch.tensor(p_eval_lst, dtype=torch.float, requires_grad=False, device=device)
+        print('prediction', p_eval_t)
+        print('labels', y_eval_t)
         accuray_value = accuray(p_eval_t, y_eval_t)
     return accuray_value.item()
 
@@ -451,6 +453,8 @@ def main(argv):
                 #     loss = loss_function_nored(p, y)
                 #     loss = loss.view(-1, nb_samples).sum(axis=1).mean(axis=0)
                 loss = loss_function(p, y)
+                print('train prediction', p)
+                print('train labels', y)
                 accuracy = acc_function(p, y)
 
                 # mask for machine selected tokens #############################################
@@ -500,8 +504,7 @@ def main(argv):
                 torch.save({'model_state_dict': model.state_dict()}, checkpoint_path)
                 best_val_loss = val_loss
 
-            wandb.log({'seed': seed, 'val_loss': val_loss, 'test_loss': test_loss, 'loss_mean': loss_mean},
-                      step=epoch_no)
+            wandb.log({'seed': seed, 'val_loss': val_loss, 'test_loss': test_loss, 'loss_mean': loss_mean}, step=epoch_no)
 
         duration = time.time() - st
         print(f'[{seed}] Training time is {duration} ms')
