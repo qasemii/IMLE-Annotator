@@ -185,9 +185,9 @@ def subset_precision_esnli(model, data, id_to_word, word_to_id, select_k, device
 
         label = data['label'][anotr]
         if label == predicted_label[0]:
-            label = '\hlc[green!60]{' +label + '}'
+            label = '\hlc[green!60]{' + label + '}'
         else:
-            label = '\hlc[red!60]{' + label + '}'
+            label = '\hlc[maroon!60]{' + label + '}'
 
 
 
