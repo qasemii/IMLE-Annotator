@@ -288,8 +288,9 @@ def main(argv):
     # Model # GloVe #########################################################
     print('Creating model...')
 
-    val_loss_lst = []
-    test_loss_lst = []
+    val_loss_lst, test_loss_lst = [], []
+    val_accuracy_lst, test_accuracy_lst = [], []
+
     subset_precision_lst = []
 
     # Cross Entropy as loss with ignoring <PAD> (ignore_index=0)
@@ -511,6 +512,14 @@ def main(argv):
         print(f"[{seed}] Test Loss: {test_loss:.5f}")
         test_loss_lst += [test_loss]
 
+        val_accuracy = evaluate_accuracy(model, X_val, y_val, device=device) * 100.0
+        print(f"[{seed}] Validation Accuracy: {val_accuracy:.5f}")
+        val_accuracy_lst += [val_accuracy]
+
+        test_accuracy = evaluate_accuracy(model, X_test, y_test, device=device) * 100.0
+        print(f"[{seed}] Test Accuracy: {test_accuracy:.5f}")
+        test_accuracy_lst += [test_accuracy]
+
         subset_prec = subset_precision_esnli(model, test_data, id_to_word, word_to_id, select_k, device=device,
                                              max_len=maxlen) * 100
         print(f"[{seed}] Subset precision: {subset_prec:.5f}")
@@ -522,6 +531,8 @@ def main(argv):
     print(f'Final Subset Precision List: {np.mean(subset_precision_lst):.5f} ± {np.std(subset_precision_lst):.5f}')
     print(f'Final Validation Loss List: {np.mean(val_loss_lst):.5f} ± {np.std(val_loss_lst):.5f}')
     print(f'Final Test Loss List: {np.mean(test_loss_lst):.5f} ± {np.std(test_loss_lst):.5f}')
+    print(f'Final Validation Accuracy List: {np.mean(val_accuracy_lst):.5f} ± {np.std(val_accuracy_lst):.5f}')
+    print(f'Final Test Accuracy List: {np.mean(test_accuracy_lst):.5f} ± {np.std(test_accuracy_lst):.5f}')
 
     if os.path.exists(checkpoint_path):
         os.remove(checkpoint_path)
