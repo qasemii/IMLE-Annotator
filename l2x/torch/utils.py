@@ -152,7 +152,6 @@ def subset_precision_esnli(model, data, id_to_word, word_to_id, select_k, device
             predicted_idx = torch.argmax(label_score, dim=1).tolist()
             predicted_label = [id_to_label[i] for i in predicted_idx]
 
-
         x_val_selected = prediction[0].cpu().numpy() * X_test_subset
         # [L,]
         selected_words = np.vectorize(id_to_word.get)(x_val_selected)[0][-review_length:]
@@ -183,13 +182,12 @@ def subset_precision_esnli(model, data, id_to_word, word_to_id, select_k, device
             text_list[i] = '\hlc[cyan!30]{' + text_list[i] + '}'
             selected_words[i] = '<PAD>'
 
+        # check if the predicted label is true or not
         label = data['label'][anotr]
         if label == predicted_label[0]:
-            label = ' \\textbf{\hlc[green!60]{' + label + '}}\\\\'
+            label = label + '\\cmark\\\\'
         else:
-            label = ' \\textbf{\hlc[maroon!60]{' + label + '}}\\\\'
-
-
+            label = label + '\\xmark\\\\'
 
         if label == 'entailment':
             entailment_dist += selected_nonpadding_word
