@@ -185,9 +185,9 @@ def subset_precision_esnli(model, data, id_to_word, word_to_id, select_k, device
         # check if the predicted label is true or not
         label = data['label'][anotr]
         if label == predicted_label[0]:
-            label = f' \\arrow {label} \\cmark\\\\'
+            label = f'\\textbf{ {label}} \\cmark\\\\'
         else:
-            label = f' \\arrow {label} \\cmark\\\\'
+            label = f'\\textbf{ {label}} \\xmark\\\\'
 
         if label == 'entailment':
             entailment_dist += selected_nonpadding_word
