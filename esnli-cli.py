@@ -32,7 +32,7 @@ from imle.solvers import mathias_select_k
 from sklearn.model_selection import train_test_split
 
 from l2x.torch.utils import set_seed, subset_precision_esnli
-from l2x.torch.modules import Model, ConcreteDistribution, SampleSubset, IMLETopK
+from l2x.torch.modules import ClassificationModel, ConcreteDistribution, SampleSubset, IMLETopK
 from l2x.utils import pad_sequences
 
 from snippets.explore_data import get_data, nltk_word_tokenize
@@ -59,29 +59,11 @@ class DifferentiableSelectKModel(torch.nn.Module):
         return self.diff_fun(logits) if self.training else self.fun(logits)
 
 
-def evaluate(model_eval: Model,
+def evaluate(model_eval: ClassificationModel,
              x_eval: np.ndarray,
              y_eval: np.ndarray,
-             device: torch.device) -> float:
+             device: torch.device) -> tuple:
     loss = torch.nn.CrossEntropyLoss()
-    x_eval_t = torch.tensor(x_eval, dtype=torch.long, device=device)
-    y_eval_t = torch.tensor(y_eval, dtype=int, device=device)
-    eval_dataset = TensorDataset(x_eval_t, y_eval_t)
-    eval_loader = DataLoader(eval_dataset, batch_size=100, shuffle=False)
-    with torch.inference_mode():
-        model_eval.eval()
-        p_eval_lst = []
-        for X, y in eval_loader:
-            p_eval_lst += model_eval(x=X).tolist()
-        p_eval_t = torch.tensor(p_eval_lst, dtype=torch.float, requires_grad=False, device=device)
-        loss_value = loss(p_eval_t, y_eval_t)
-    return loss_value.item()
-
-
-def evaluate_accuracy(model_eval: Model,
-                      x_eval: np.ndarray,
-                      y_eval: np.ndarray,
-                      device: torch.device) -> float:
     accuray = Accuracy(task="multiclass", num_classes=3).to(device)
     x_eval_t = torch.tensor(x_eval, dtype=torch.long, device=device)
     y_eval_t = torch.tensor(y_eval, dtype=int, device=device)
@@ -93,8 +75,9 @@ def evaluate_accuracy(model_eval: Model,
         for X, y in eval_loader:
             p_eval_lst += model_eval(x=X).tolist()
         p_eval_t = torch.tensor(p_eval_lst, dtype=torch.float, requires_grad=False, device=device)
+        loss_value = loss(p_eval_t, y_eval_t)
         accuray_value = accuray(p_eval_t, y_eval_t)
-    return accuray_value.item()
+    return loss_value.item(), accuray_value.item()
 
 
 def main(argv):
@@ -398,7 +381,7 @@ def main(argv):
         else:
             assert False, f'Method not supported: {method_name}'
 
-        model = Model(embedding_weights=embedding_matrix_t,
+        model = ClassificationModel(embedding_weights=embedding_matrix_t,
                       hidden_dims=hidden_dims,
                       kernel_size=kernel_size,
                       select_k=select_k,
@@ -483,11 +466,8 @@ def main(argv):
             # '\tHighlight Loss: {highlights_loss_mean: .4f} ± {highlights_loss_std: .4f}'
 
             # Checkpointing
-            val_loss = evaluate(model, X_val, y_val, device=device)
-            test_loss = evaluate(model, X_test, y_test, device=device)
-
-            val_accuracy = evaluate_accuracy(model, X_val, y_val, device=device)
-            test_accuracy = evaluate_accuracy(model, X_test, y_test, device=device)
+            val_loss, val_accuracy = evaluate(model, X_val, y_val, device=device)
+            test_loss, test_accuracy = evaluate(model, X_test, y_test, device=device)
 
             if best_val_loss is None or val_loss <= best_val_loss:
                 print(f'Saving new checkpoint -- new best validation Loss: {val_loss:.5f} - Accuracy: {val_accuracy:.5f}')
@@ -504,19 +484,18 @@ def main(argv):
             checkpoint = torch.load(checkpoint_path)
             model.load_state_dict(checkpoint['model_state_dict'])
 
-        val_loss = evaluate(model, X_val, y_val, device=device) * 100.0
+        val_loss, val_accuracy = evaluate(model, X_val, y_val, device=device) * 100.0
+        test_loss, test_accuracy = evaluate(model, X_test, y_test, device=device) * 100.0
+
         print(f"[{seed}] Validation Loss: {val_loss:.5f}")
         val_loss_lst += [val_loss]
 
-        test_loss = evaluate(model, X_test, y_test, device=device) * 100.0
         print(f"[{seed}] Test Loss: {test_loss:.5f}")
         test_loss_lst += [test_loss]
 
-        val_accuracy = evaluate_accuracy(model, X_val, y_val, device=device) * 100.0
         print(f"[{seed}] Validation Accuracy: {val_accuracy:.5f}")
         val_accuracy_lst += [val_accuracy]
 
-        test_accuracy = evaluate_accuracy(model, X_test, y_test, device=device) * 100.0
         print(f"[{seed}] Test Accuracy: {test_accuracy:.5f}")
         test_accuracy_lst += [test_accuracy]
 
