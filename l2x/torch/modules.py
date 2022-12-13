@@ -172,7 +172,7 @@ class IMLETopK(torch.autograd.Function):
         return grad
 
 
-class PredictionModel(torch.nn.Module):
+class ScorePredictionModel(torch.nn.Module):
     def __init__(self,
                  embedding_weights: Tensor,
                  hidden_dims: int,
@@ -188,7 +188,50 @@ class PredictionModel(torch.nn.Module):
         self.layer_1 = nn.Linear(in_features=self.embedding_dim, out_features=self.hidden_dims, bias=True)
         init(self.layer_1)
 
-        self.layer_2 = nn.Linear(in_features=self.hidden_dims, out_features=3, bias=True)
+        self.layer_2 = nn.Linear(in_features=self.hidden_dims, out_features=1, bias=True)
+        init(self.layer_2)
+
+        self.activation = nn.ReLU()
+        self.output_activation = nn.Sigmoid()
+
+    def forward(self,
+                x: Tensor,
+                mask: Tensor) -> Tensor:
+        # [B, T] -> [B, T, E]
+        x_emb = self.embeddings(x)
+
+        # [B, S, E]
+        res = x_emb * mask
+        # [B, E]
+        # res = torch.mean(res, dim=1)
+        res = torch.sum(res, dim=1) / self.select_k
+        # [B, H]
+        res = self.layer_1(res)
+        res = self.activation(res)
+        # [B, 1]
+        res = self.layer_2(res)
+        res = self.output_activation(res)
+        return res
+
+
+class MulticlassPredictionModel(torch.nn.Module):
+    def __init__(self,
+                 embedding_weights: Tensor,
+                 n_classes: int,
+                 hidden_dims: int,
+                 select_k: int):
+        super().__init__()
+        self.nb_words = embedding_weights.shape[0]
+        self.embedding_dim = embedding_weights.shape[1]
+        self.hidden_dims = hidden_dims
+        self.select_k = float(select_k)
+
+        self.embeddings = nn.Embedding.from_pretrained(embedding_weights, freeze=True)
+
+        self.layer_1 = nn.Linear(in_features=self.embedding_dim, out_features=self.hidden_dims, bias=True)
+        init(self.layer_1)
+
+        self.layer_2 = nn.Linear(in_features=self.hidden_dims, out_features=n_classes, bias=True)
         init(self.layer_2)
 
         self.activation = nn.ReLU()
@@ -214,7 +257,64 @@ class PredictionModel(torch.nn.Module):
         return res
 
 
-class Model(torch.nn.Module):
+class ClassificationModel(torch.nn.Module):
+    def __init__(self,
+                 embedding_weights: Tensor,
+                 hidden_dims: int,
+                 kernel_size: int,
+                 n_classes: int,
+                 select_k: int,
+                 differentiable_select_k: Optional[Callable[[Tensor], Tensor]] = None):
+        super().__init__()
+        self.gumbel_selector = GumbelSelector(embedding_weights=embedding_weights, kernel_size=kernel_size)
+        self.prediction_model = MulticlassPredictionModel(embedding_weights=embedding_weights, n_classes=n_classes,
+                                                          hidden_dims=hidden_dims, select_k=select_k)
+        self.differentiable_select_k = differentiable_select_k
+
+    def z(self, x: Tensor) -> Tensor:
+        # [B, 1, T]
+        token_logits = self.gumbel_selector(x)
+        token_logits = token_logits.to(x.device)
+        # [B, T, 1]
+        token_logits = token_logits.transpose(1, 2)
+        batch_size_ = token_logits.shape[0]
+        seq_len_ = token_logits.shape[1]
+        assert token_logits.shape[2] == 1
+        token_logits = token_logits.view(batch_size_, seq_len_)
+        # [B, T]
+        if self.differentiable_select_k is None:
+            assert False, "This should never happen"
+            token_selections = IMLETopK.apply(token_logits)
+        else:
+            token_selections = self.differentiable_select_k(token_logits)
+        return token_selections
+
+    def forward(self, x: Tensor) -> Tensor:
+        # [B, T]
+        token_selections = self.z(x)
+        # [B, T, 1]
+        token_selections = torch.unsqueeze(token_selections, dim=-1)
+
+        # Now, note that, while x is [B, T], token_selections is [B * S, T, 1],
+        # where S is the number of samples drawn by I-MLE during the forward pass.
+        # We may need to replicate x S times.
+
+        batch_size = x.shape[0]
+        seq_len = x.shape[1]
+
+        assert token_selections.shape[1] == seq_len
+
+        if token_selections.shape[0] > batch_size:
+            nb_samples = token_selections.shape[0] // batch_size
+            x = x.view(batch_size, 1, seq_len)
+            x = x.repeat(1, nb_samples, 1)
+            x = x.view(batch_size * nb_samples, seq_len)
+
+        p = self.prediction_model(x=x, mask=token_selections)
+        return p
+
+
+class ScoreModel(torch.nn.Module):
     def __init__(self,
                  embedding_weights: Tensor,
                  hidden_dims: int,
@@ -223,7 +323,8 @@ class Model(torch.nn.Module):
                  differentiable_select_k: Optional[Callable[[Tensor], Tensor]] = None):
         super().__init__()
         self.gumbel_selector = GumbelSelector(embedding_weights=embedding_weights, kernel_size=kernel_size)
-        self.prediction_model = PredictionModel(embedding_weights=embedding_weights, hidden_dims=hidden_dims, select_k=select_k)
+        self.prediction_model = ScorePredictionModel(embedding_weights=embedding_weights,
+                                                     hidden_dims=hidden_dims, select_k=select_k)
         self.differentiable_select_k = differentiable_select_k
 
     def z(self, x: Tensor) -> Tensor:
