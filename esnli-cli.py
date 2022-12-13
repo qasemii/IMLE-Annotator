@@ -382,10 +382,11 @@ def main(argv):
             assert False, f'Method not supported: {method_name}'
 
         model = ClassificationModel(embedding_weights=embedding_matrix_t,
-                      hidden_dims=hidden_dims,
-                      kernel_size=kernel_size,
-                      select_k=select_k,
-                      differentiable_select_k=differentiable_select_k).to(device)
+                                    hidden_dims=hidden_dims,
+                                    kernel_size=kernel_size,
+                                    n_classes=3,
+                                    select_k=select_k,
+                                    differentiable_select_k=differentiable_select_k).to(device)
 
         print('Model:')
         group_name_to_nparams = dict()
