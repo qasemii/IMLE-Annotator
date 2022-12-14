@@ -151,7 +151,7 @@ def subset_precision_esnli(model, data, id_to_word, word_to_id, select_k, device
             prediction = model.z(X_test_subset_t)
 
             label_score = model(X_test_subset_t)
-            predicted_idx = torch.argmax(label_score, dim=1).tolist()
+            predicted_idx = torch.argmax(label_score, dim=1)
             predicted_label = id_to_label[predicted_idx]
 
         x_val_selected = prediction[0].cpu().numpy() * X_test_subset
