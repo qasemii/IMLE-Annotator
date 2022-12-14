@@ -50,7 +50,7 @@ class DifferentiableSelectKModel(torch.nn.Module):
         return self.diff_fun(logits) if self.training else self.fun(logits)
 
 
-def evaluate(model_eval: Model,
+def evaluate(model_eval: ScorePredictionModel,
              x_eval: np.ndarray,
              y_eval: np.ndarray,
              device: torch.device) -> float:
