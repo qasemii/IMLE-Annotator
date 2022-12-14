@@ -124,7 +124,7 @@ def main(argv):
     aspect = args.aspect
 
     input_path_train = "/content/imle-annotator/data/BeerAdvocate/reviews.aspect" + str(aspect) + ".train.txt"
-    input_path_validation = "/content/imle-annotator/data/BeerAdvocate//reviews.aspect" + str(aspect) + ".heldout.txt"
+    input_path_validation = "/content/imle-annotator/data/BeerAdvocate/reviews.aspect" + str(aspect) + ".heldout.txt"
 
     # the dictionary mapping words to their IDs
     word_to_id = dict()
