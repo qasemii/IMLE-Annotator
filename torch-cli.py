@@ -123,8 +123,8 @@ def main(argv):
 
     aspect = args.aspect
 
-    input_path_train = "data/reviews.aspect" + str(aspect) + ".train.txt"
-    input_path_validation = "data/reviews.aspect" + str(aspect) + ".heldout.txt"
+    input_path_train = "/content/imle-annotator/data/BeerAdvocate/reviews.aspect" + str(aspect) + ".train.txt"
+    input_path_validation = "/content/imle-annotator/data/BeerAdvocate//reviews.aspect" + str(aspect) + ".heldout.txt"
 
     # the dictionary mapping words to their IDs
     word_to_id = dict()
@@ -200,7 +200,7 @@ def main(argv):
 
     # this cell loads the word embeddings from the external data
     embeddings_index = {}
-    with open("data/review+wiki.filtered.200.txt") as f:
+    with open("/content/imle-annotator/data/BeerAdvocate/review+wiki.filtered.200.txt") as f:
         for line in f:
             values = line.split()
             word = values[0]
