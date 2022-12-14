@@ -200,7 +200,7 @@ def main(argv):
 
     # this cell loads the word embeddings from the external data
     embeddings_index = {}
-    with open("data/review+wiki.filtered.200.txt") as f:
+    with open("/content/imle-annotator/data/BeerAdvocate/review+wiki.filtered.200.txt") as f:
         for line in f:
             values = line.split()
             word = values[0]
