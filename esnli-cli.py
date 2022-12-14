@@ -65,10 +65,13 @@ def evaluate(model_eval: ClassificationModel,
              device: torch.device) -> tuple:
     loss = torch.nn.CrossEntropyLoss()
     accuray = Accuracy(task="multiclass", num_classes=3).to(device)
+
     x_eval_t = torch.tensor(x_eval, dtype=torch.long, device=device)
     y_eval_t = torch.tensor(y_eval, dtype=int, device=device)
+
     eval_dataset = TensorDataset(x_eval_t, y_eval_t)
     eval_loader = DataLoader(eval_dataset, batch_size=100, shuffle=False)
+
     with torch.inference_mode():
         model_eval.eval()
         p_eval_lst = []
