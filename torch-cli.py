@@ -25,7 +25,7 @@ from imle.solvers import mathias_select_k
 from sklearn.model_selection import train_test_split
 
 from l2x.torch.utils import set_seed, subset_precision
-from l2x.torch.modules import ScorePredictionModel, ConcreteDistribution, SampleSubset, IMLETopK
+from l2x.torch.modules import ScoreModel, ConcreteDistribution, SampleSubset, IMLETopK
 from l2x.utils import pad_sequences
 
 from typing import Optional, Callable
@@ -326,11 +326,11 @@ def main(argv):
         else:
             assert False, f'Method not supported: {method_name}'
 
-        model = ScorePredictionModel(embedding_weights=embedding_matrix_t,
-                                     hidden_dims=hidden_dims,
-                                     kernel_size=kernel_size,
-                                     select_k=select_k,
-                                     differentiable_select_k=differentiable_select_k).to(device)
+        model = ScoreModel(embedding_weights=embedding_matrix_t,
+                           hidden_dims=hidden_dims,
+                           kernel_size=kernel_size,
+                           select_k=select_k,
+                           differentiable_select_k=differentiable_select_k).to(device)
 
         print('Model:')
         group_name_to_nparams = dict()
