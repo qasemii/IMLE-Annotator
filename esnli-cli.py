@@ -485,8 +485,8 @@ def main(argv):
             checkpoint = torch.load(checkpoint_path)
             model.load_state_dict(checkpoint['model_state_dict'])
 
-        val_loss, val_accuracy = evaluate(model, X_val, y_val, device=device) * 100.0
-        test_loss, test_accuracy = evaluate(model, X_test, y_test, device=device) * 100.0
+        val_loss, val_accuracy = evaluate(model, X_val, y_val, device=device)
+        test_loss, test_accuracy = evaluate(model, X_test, y_test, device=device)
 
         print(f"[{seed}] Validation Loss: {val_loss:.5f}")
         val_loss_lst += [val_loss]
@@ -500,9 +500,8 @@ def main(argv):
         print(f"[{seed}] Test Accuracy: {test_accuracy:.5f}")
         test_accuracy_lst += [test_accuracy]
 
-        subset_prec = subset_precision_esnli(model, test_data, id_to_word, word_to_id, select_k, device=device,
-                                             max_len=maxlen) * 100
-        print(f"[{seed}] Subset precision: {subset_prec:.5f}")
+        subset_prec = subset_precision_esnli(model, test_data, id_to_word, word_to_id, select_k, device=device, max_len=maxlen) * 100
+        print(f"[{seed}] Subset precision: %{subset_prec:.5f}")
         subset_precision_lst += [subset_prec]
 
         wandb.log({'best_val_loss': val_loss, 'best_test_loss': test_loss, 'best_subset_prec': subset_prec})
