@@ -113,7 +113,7 @@ def subset_precision(model, aspect, id_to_word, word_to_id, select_k, device: to
             text_list[r[0]] = '\hlc[cyan!30]{' + text_list[r[0]]
             text_list[r[1] - 1] = text_list[r[1] - 1] + '}'
 
-        highlights.append(' '.join(text_list) + ' \\textbf{Predicted Score}: ' + f'{predicted_score.item()}' +
+        highlights.append(' '.join(text_list) + ' \\textbf{Predicted Score}: ' + f'{predicted_score.item():.2f}' +
                                                 ' \\textbf{Ground Truth}: ' + f'{ground_truth}' + '\\\\')
 
         # we make sure that we select at least 10 non-padding words
