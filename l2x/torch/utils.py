@@ -82,7 +82,7 @@ def subset_precision(model, aspect, id_to_word, word_to_id, select_k, device: to
             model.eval()
             prediction = model.z(X_test_subset_t)
 
-            predicted_score = model(X_test_subset_t)[0][0]
+            predicted_score = model(X_test_subset_t).item()
         ground_truth = data[anotr]['y'][aspect]
 
         x_val_selected = prediction[0].cpu().numpy() * X_test_subset
