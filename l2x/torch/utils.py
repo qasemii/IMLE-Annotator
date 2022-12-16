@@ -82,7 +82,7 @@ def subset_precision(model, aspect, id_to_word, word_to_id, select_k, device: to
             model.eval()
             prediction = model.z(X_test_subset_t)
 
-            predicted_score = model(X_test_subset_t).item()
+            predicted_score = model(X_test_subset_t)
         ground_truth = data[anotr]['y'][aspect]
 
         x_val_selected = prediction[0].cpu().numpy() * X_test_subset
@@ -113,8 +113,8 @@ def subset_precision(model, aspect, id_to_word, word_to_id, select_k, device: to
             text_list[r[0]] = '\hlc[cyan!30]{' + text_list[r[0]]
             text_list[r[1] - 1] = text_list[r[1] - 1] + '}'
 
-        highlights.append(' '.join(text_list) + ' \\textbf{Predicted Score}: ' + str(predicted_score) +
-                                                ' \\textbf{Ground Truth}: ' + ground_truth + '\\\\')
+        highlights.append(' '.join(text_list) + ' \\textbf{Predicted Score}: ' + f'{predicted_score.item()}' +
+                                                ' \\textbf{Ground Truth}: ' + f'{ground_truth}' + '\\\\')
 
         # we make sure that we select at least 10 non-padding words
         # if we have more than select_k non-padding words selected, we allow it but count that in
