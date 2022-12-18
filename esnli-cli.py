@@ -64,7 +64,7 @@ def evaluate(model_eval: ClassificationModel,
              y_eval: np.ndarray,
              device: torch.device) -> tuple:
     loss = torch.nn.CrossEntropyLoss(ignore_index=0)
-    accuray = Accuracy(task="multiclass", num_classes=3).to(device)
+    accuray = Accuracy(task="multiclass", num_classes=3, ignore_index=0).to(device)
 
     x_eval_t = torch.tensor(x_eval, dtype=torch.long, device=device)
     y_eval_t = torch.tensor(y_eval, dtype=int, device=device)
