@@ -152,7 +152,7 @@ def main(argv):
     checkpoint_path = args.checkpoint
 
     # get data dictionary
-    TRAIN_INPUT_PATH = '../data/esnli_train_1.csv'
+    TRAIN_INPUT_PATH = '../data/eSNLI/esnli_train_1.csv'
     train_data = get_data(TRAIN_INPUT_PATH)
 
     # tokenize using nltk word tokenizer
@@ -200,7 +200,7 @@ def main(argv):
 
     # Validation data #####################################################
     print("Loading validation data...")
-    VALIDATION_INPUT_PATH = '../data/esnli_dev.csv'
+    VALIDATION_INPUT_PATH = '../data/eSNLI/esnli_dev.csv'
     val_data = get_data(VALIDATION_INPUT_PATH)
 
     # tokenize using nltk word tokenizer
@@ -220,7 +220,7 @@ def main(argv):
 
     # Test data ###########################################################
     print("Loading test data...")
-    TEST_INPUT_PATH = '../data/esnli_test.csv'
+    TEST_INPUT_PATH = '../data/eSNLI/esnli_test.csv'
     test_data = get_data(TEST_INPUT_PATH)
 
     # tokenize using nltk word tokenizer

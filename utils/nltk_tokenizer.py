@@ -4,7 +4,7 @@ from snippets.explore_data import get_data
 
 # nltk.download('punkt')
 
-data_path = '../data/esnli_train_1.csv'
+data_path = '../data/eSNLI/esnli_train_1.csv'
 data = get_data(data_path)
 
 sample = data['sentences'][23]
