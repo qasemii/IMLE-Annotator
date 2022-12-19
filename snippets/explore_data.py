@@ -22,9 +22,33 @@ def get_data(file_dir):
 
         s1_highlight, s2_highlight, s_highlight = [], [], []
 
-        # s1_tokens = word_tokenize(premise_marked)
-        # s2_tokens = word_tokenize(hypothesis_marked)
+        s1_tokens = word_tokenize(premise_marked)
+        s2_tokens = word_tokenize(hypothesis_marked)
         s_tokens = word_tokenize(sentence_marked)
+
+        # getting highlights for premise
+        j = 0
+        h_detected = False
+        for i, w in enumerate(s1_tokens):
+            if w == '*' and not h_detected:
+                s1_highlight.append(j)
+                h_detected = True
+            elif w == '*' and h_detected:
+                h_detected = False
+            else:
+                j = j + 1
+
+        # getting highlights for hypothesis
+        j = 0
+        h_detected = False
+        for i, w in enumerate(s2_tokens):
+            if w == '*' and not h_detected:
+                s2_highlight.append(j)
+                h_detected = True
+            elif w == '*' and h_detected:
+                h_detected = False
+            else:
+                j = j + 1
 
         # getting highlights for merged sentence
         j = 0
@@ -38,9 +62,13 @@ def get_data(file_dir):
             else:
                 j = j + 1
 
-        premise.append(s1)
-        hypothesis.append(s2)
-        sentence.append(sentence_merged)
+        s1_tokenized = word_tokenize(s1)
+        s2_tokenized = word_tokenize(s2)
+        s_tokenized = word_tokenize(sentence_merged)
+
+        premise.append(s1_tokenized)
+        hypothesis.append(s2_tokenized)
+        sentence.append(s_tokenized)
 
         label.append(lbl)
 
@@ -66,30 +94,42 @@ def nltk_word_tokenize(input_list):
 
 
 if __name__ == '__main__':
-    # TRAIN_INPUT_PATH = '../data/esnli_train_1.csv'
-    # train_data = get_data(TRAIN_INPUT_PATH)
-    # train_tokenized = nltk_word_tokenize(train_data['sentence']['merged'])
-    # train_data['sentence']['merged'] = train_tokenized
+    # TRAIN_INPUT_PATH = '../data/eSNLI/esnli_train_1.csv'
+    # train_data_1 = get_data(TRAIN_INPUT_PATH)
+    # with open('../data/eSNLI/esnli_train_1_preprocessed.pkl', 'wb') as file:
+    #     pickle.dump(train_data_1, file)
+    #
+    # TRAIN_INPUT_PATH = '../data/eSNLI/esnli_train_2.csv'
+    # train_data_2 = get_data(TRAIN_INPUT_PATH)
+    # with open('../data/eSNLI/esnli_train_2_preprocessed.pkl', 'wb') as file:
+    #     pickle.dump(train_data_2, file)
+    #
+    # train_data = {'sentence': {'merged': train_data_1['sentence']['merged'] + train_data_2['sentence']['merged'],
+    #                            'premise': train_data_1['sentence']['premise'] + train_data_2['sentence']['premise'],
+    #                            'hypothesis': train_data_1['sentence']['hypothesis'] + train_data_2['sentence']['hypothesis']},
+    #               'label': train_data_1['label'] + train_data_2['label'],
+    #               'highlight': {'merged': train_data_1['highlight']['merged'] + train_data_2['highlight']['merged'],
+    #                             'premise': train_data_1['highlight']['premise'] + train_data_2['highlight']['premise'],
+    #                             'hypothesis': train_data_1['highlight']['hypothesis'] + train_data_2['highlight']['hypothesis']}}
     #
     # with open('../data/eSNLI/esnli_train_preprocessed.pkl', 'wb') as file:
     #     pickle.dump(train_data, file)
     #
-    # VALIDATION_INPUT_PATH = '../data/esnli_dev.csv'
+    # VALIDATION_INPUT_PATH = '../data/eSNLI/esnli_dev.csv'
     # val_data = get_data(VALIDATION_INPUT_PATH)
-    # val_tokenized = nltk_word_tokenize(val_data['sentence']['merged'])
-    # val_data['sentence']['merged'] = val_tokenized
     # with open('../data/eSNLI/esnli_val_preprocessed.pkl', 'wb') as file:
     #     pickle.dump(val_data, file)
     #
-    # TEST_INPUT_PATH = '../data/esnli_test.csv'
+    # TEST_INPUT_PATH = '../data/eSNLI/esnli_test.csv'
     # test_data = get_data(TEST_INPUT_PATH)
-    # test_tokenized = nltk_word_tokenize(test_data['sentence']['merged'])
-    # test_data['sentence']['merged'] = test_tokenized
     # with open('../data/eSNLI/esnli_test_preprocessed.pkl', 'wb') as file:
     #     pickle.dump(test_data, file)
+    #
+    # print('Done')
 
-    PATH = '../data/eSNLI/esnli_test_preprocessed.pkl'
-    with open(PATH, 'rb') as file:
-        stats = pickle.load(file)
-
-    pass
+    # ############################ read the generated files
+    # TRAIN_INPUT_PATH = '../data/eSNLI/esnli_train_preprocessed.pkl'
+    # with open(TRAIN_INPUT_PATH, 'rb') as file:
+    #     train_data = pickle.load(file)
+    #
+    # print('Done')
