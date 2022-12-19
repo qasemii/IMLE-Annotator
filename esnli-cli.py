@@ -153,19 +153,33 @@ def main(argv):
     involve_highlights = args.highlight
     checkpoint_path = args.checkpoint
 
-    # Downloading nltk punkt
-    try:
-        nltk.data.find('tokenizers/punkt')
-        print('NLTK has been already installed')
-    except LookupError:
-        print('Downloading NLTK punkt package ...')
-        nltk.download('punkt')
-
     # get data dictionary
     print("Loading Train Data...")
-    TRAIN_INPUT_PATH = 'data/eSNLI/esnli_test_preprocessed.pkl'
+    TRAIN_INPUT_PATH = 'data/eSNLI/esnli_test_1_preprocessed.pkl'
     with open(TRAIN_INPUT_PATH, 'rb') as file:
-        train_data = pickle.load(file)
+        train_data_1 = pickle.load(file)
+
+    TRAIN_INPUT_PATH = 'data/eSNLI/esnli_test_2_preprocessed.pkl'
+    with open(TRAIN_INPUT_PATH, 'rb') as file:
+        train_data_2 = pickle.load(file)
+
+    # merging two parts of the train data
+    train_data = {'sentence': {'merged':
+                                   train_data_1['sentence']['merged'] + train_data_2['sentence']['merged'],
+                               'premise':
+                                   train_data_1['sentence']['premise'] + train_data_2['sentence']['premise'],
+                               'hypothesis':
+                                   train_data_1['sentence']['hypothesis'] + train_data_2['sentence']['hypothesis']},
+
+                  'highlight': {'merged':
+                                    train_data_1['highlight']['merged'] + train_data_2['highlight']['merged'],
+                                'premise':
+                                    train_data_1['highlight']['premise'] + train_data_2['highlight']['premise'],
+                                'hypothesis':
+                                    train_data_1['highlight']['hypothesis'] + train_data_2['highlight']['hypothesis']},
+
+                  'label': train_data_1['label'] + train_data_2['label']}
+
     tokenized_sentence = train_data['sentence']['merged']
 
     # the dictionary mapping words to their IDs
