@@ -186,7 +186,7 @@ def main(argv):
     id_to_word = {value: key for key, value in word_to_id.items()}
 
     # label
-    label_to_id = {'entailment': 2, 'neutral': 1, 'contradiction': 0}
+    label_to_id = {'contradiction': 2, 'neutral': 1, 'entailment': 0}
     id_to_label = {value: key for key, value in label_to_id.items()}
 
     # Train data #########################################################

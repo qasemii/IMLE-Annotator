@@ -133,8 +133,8 @@ def subset_precision_esnli(model, data, id_to_word, word_to_id, select_k, device
     marked_highlights_list = []
     entailment_dist, contradiction_dist, neutral_dist = [], [], []
 
-    label_to_id = {'entailment': 2, 'neutral': 1, 'contradiction': 0}
-    id_to_label = ['contradiction', 'neutral', 'entailment']
+    label_to_id = {'contradiction': 2, 'neutral': 1, 'entailment': 0}
+    id_to_label = ['entailment', 'neutral', 'contradiction']
 
     selected_word_counter, correct_selected_counter = 0, 0
     for anotr in range(len(tokenized_sentence)):
