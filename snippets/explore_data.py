@@ -10,10 +10,11 @@ def get_data(file_dir):
     file = open(file_dir)
     rows = csv.DictReader(file)
 
-    premise, hypothesis, sentence, label, premise_highlight_idx, hypothesis_highlight_idx, highlight = [], [], [], [], [], [], []
+    premise, hypothesis, sentence, explanation, label, premise_highlight_idx, hypothesis_highlight_idx, highlight = [], [], [], [], [], [], [], []
     for row in rows:
         s1, s2 = row['Sentence1'], row['Sentence2']
         sentence_merged = s1 + ' ' + s2
+        exp = row['Explanation_1']
 
         premise_marked, hypothesis_marked = row['Sentence1_marked_1'], row['Sentence2_marked_1']
         sentence_marked = premise_marked + ' ' + hypothesis_marked
@@ -64,11 +65,13 @@ def get_data(file_dir):
 
         s1_tokenized = word_tokenize(s1)
         s2_tokenized = word_tokenize(s2)
-        s_tokenized = word_tokenize(sentence_merged)
+        s_tokenized = s1_tokenized + s2_tokenized
+        exp_tokenized = s_tokenized + word_tokenize(exp)
 
         premise.append(s1_tokenized)
         hypothesis.append(s2_tokenized)
         sentence.append(s_tokenized)
+        explanation.append(exp_tokenized)
 
         label.append(lbl)
 
@@ -78,7 +81,8 @@ def get_data(file_dir):
 
     return {'sentence': {'merged': sentence,
                          'premise': premise,
-                         'hypothesis': hypothesis},
+                         'hypothesis': hypothesis,
+                         'explanation': explanation},
             'label': label,
             'highlight': {'merged': highlight,
                           'premise': premise_highlight_idx,
@@ -94,8 +98,8 @@ def nltk_word_tokenize(input_list):
 
 
 if __name__ == '__main__':
-    # TRAIN_INPUT_PATH = '../data/eSNLI/esnli_train_1.csv'
-    # train_data_1 = get_data(TRAIN_INPUT_PATH)
+    TRAIN_INPUT_PATH = '../data/eSNLI/esnli_train_1.csv'
+    train_data_1 = get_data(TRAIN_INPUT_PATH)
     # with open('../data/eSNLI/esnli_train_1_preprocessed.pkl', 'wb') as file:
     #     pickle.dump(train_data_1, file)
     #
