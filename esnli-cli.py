@@ -180,7 +180,8 @@ def main(argv):
     #
     #               'label': train_data_1['label'] + train_data_2['label']}
 
-    tokenized_sentence = train_data_1['sentence']['merged']
+    train_data = train_data_1
+    tokenized_sentence = train_data['sentence']['merged']
 
     # the dictionary mapping words to their IDs
     print('Preparing Word IDs')
