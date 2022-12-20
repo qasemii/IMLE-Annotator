@@ -267,8 +267,8 @@ def main(argv):
     # GloVe ###############################################################
     print('Loading GloVe ...')
     # create word_vec with glove vectors
-    # GLOVE_PATH = '/content/gdrive/MyDrive/glove.42B.300d.txt'
-    GLOVE_PATH = 'data/GloVe/glove.42B.300d.txt'
+    GLOVE_PATH = '/content/gdrive/MyDrive/glove.42B.300d.txt'
+    # GLOVE_PATH = 'data/GloVe/glove.42B.300d.txt'
 
     word_vec = {}
     with open(GLOVE_PATH) as f:
