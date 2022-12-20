@@ -88,10 +88,10 @@ def main(argv):
                                      formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
     parser.add_argument('--epochs', '-e', action='store', type=int, default=5, help='Epochs')
-    parser.add_argument('--batch-size', '-b', action='store', type=int, default=40, help='Batch Size')
+    parser.add_argument('--batch-size', '-b', action='store', type=int, default=64, help='Batch Size')
     parser.add_argument('--kernel-size', '-k', action='store', type=int, default=3, help='Kernel Size')
     parser.add_argument('--hidden-dims', '-H', action='store', type=int, default=250, help='Hidden Dimensions')
-    parser.add_argument('--max-len', '-m', action='store', type=int, default=350, help='Maximum Sequence Length')
+    parser.add_argument('--max-len', '-m', action='store', type=int, default=150, help='Maximum Sequence Length')
     parser.add_argument('--select-k', '-K', action='store', type=int, default=5, help='Select K')
     parser.add_argument('--highlight', action='store', default=False, help='Involving Highlights in Training')
 
