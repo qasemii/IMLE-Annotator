@@ -155,14 +155,14 @@ def main(argv):
 
     # get data dictionary
     print("Loading Train Data...")
-    # TRAIN_INPUT_PATH = 'data/eSNLI/esnli_train_1_preprocessed.pkl'
-    TRAIN_INPUT_PATH = '/content/gdrive/MyDrive/esnli_train_1_with_exp.pkl'
+    TRAIN_INPUT_PATH = 'data/eSNLI/esnli_train_1_preprocessed.pkl'
+    # TRAIN_INPUT_PATH = '/content/gdrive/MyDrive/esnli_train_1_with_exp.pkl'
     with open(TRAIN_INPUT_PATH, 'rb') as file:
         train_data_1 = pickle.load(file)
 
-    # TRAIN_INPUT_PATH = 'data/eSNLI/esnli_train_2_preprocessed.pkl'
-    # with open(TRAIN_INPUT_PATH, 'rb') as file:
-    #     train_data_2 = pickle.load(file)
+    TRAIN_INPUT_PATH = 'data/eSNLI/esnli_train_2_preprocessed.pkl'
+    with open(TRAIN_INPUT_PATH, 'rb') as file:
+        train_data_2 = pickle.load(file)
     #
     # # merging two parts of the train data
     # train_data = {'sentence': {'merged':
@@ -181,7 +181,7 @@ def main(argv):
     #
     #               'label': train_data_1['label'] + train_data_2['label']}
 
-    train_data = train_data_1
+    train_data = train_data_2
     tokenized_sentence = train_data['sentence']['explanation']
 
     # the dictionary mapping words to their IDs
