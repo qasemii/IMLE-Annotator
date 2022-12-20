@@ -155,7 +155,8 @@ def main(argv):
 
     # get data dictionary
     print("Loading Train Data...")
-    TRAIN_INPUT_PATH = 'data/eSNLI/esnli_train_1_with_exp.pkl'
+    # TRAIN_INPUT_PATH = 'data/eSNLI/esnli_train_1_preprocessed.pkl'
+    TRAIN_INPUT_PATH = '/content/gdrive/MyDrive/esnli_train_1_with_exp.pkl'
     with open(TRAIN_INPUT_PATH, 'rb') as file:
         train_data_1 = pickle.load(file)
 
