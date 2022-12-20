@@ -163,26 +163,27 @@ def main(argv):
     with open(TRAIN_INPUT_PATH, 'rb') as file:
         train_data_2 = pickle.load(file)
 
-    # merging two parts of the train data
-    train_data = {'sentence': {'merged':
-                                   train_data_1['sentence']['merged'] + train_data_2['sentence']['merged'],
-                               'premise':
-                                   train_data_1['sentence']['premise'] + train_data_2['sentence']['premise'],
-                               'hypothesis':
-                                   train_data_1['sentence']['hypothesis'] + train_data_2['sentence']['hypothesis']},
+    # # merging two parts of the train data
+    # train_data = {'sentence': {'merged':
+    #                                train_data_1['sentence']['merged'] + train_data_2['sentence']['merged'],
+    #                            'premise':
+    #                                train_data_1['sentence']['premise'] + train_data_2['sentence']['premise'],
+    #                            'hypothesis':
+    #                                train_data_1['sentence']['hypothesis'] + train_data_2['sentence']['hypothesis']},
+    #
+    #               'highlight': {'merged':
+    #                                 train_data_1['highlight']['merged'] + train_data_2['highlight']['merged'],
+    #                             'premise':
+    #                                 train_data_1['highlight']['premise'] + train_data_2['highlight']['premise'],
+    #                             'hypothesis':
+    #                                 train_data_1['highlight']['hypothesis'] + train_data_2['highlight']['hypothesis']},
+    #
+    #               'label': train_data_1['label'] + train_data_2['label']}
 
-                  'highlight': {'merged':
-                                    train_data_1['highlight']['merged'] + train_data_2['highlight']['merged'],
-                                'premise':
-                                    train_data_1['highlight']['premise'] + train_data_2['highlight']['premise'],
-                                'hypothesis':
-                                    train_data_1['highlight']['hypothesis'] + train_data_2['highlight']['hypothesis']},
-
-                  'label': train_data_1['label'] + train_data_2['label']}
-
-    tokenized_sentence = train_data['sentence']['merged']
+    tokenized_sentence = train_data_1['sentence']['merged']
 
     # the dictionary mapping words to their IDs
+    print('Preparing Word IDs')
     word_to_id = dict()
     token_id_counter = 3
     for token_list in tokenized_sentence:
@@ -265,8 +266,8 @@ def main(argv):
     # GloVe ###############################################################
     print('Loading GloVe ...')
     # create word_vec with glove vectors
-    GLOVE_PATH = '/content/gdrive/MyDrive/glove.42B.300d.txt'
-    # GLOVE_PATH = 'data/GloVe/glove.42B.300d.txt'
+    # GLOVE_PATH = '/content/gdrive/MyDrive/glove.42B.300d.txt'
+    GLOVE_PATH = 'data/GloVe/glove.42B.300d.txt'
 
     word_vec = {}
     with open(GLOVE_PATH) as f:
