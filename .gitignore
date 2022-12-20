@@ -3,6 +3,9 @@
 glove.42B.300d.txt
 *.pt
 
+data/eSNLI/esnli_train_1_with_exp.pkl
+
+
 data/BeerAdvocate/annotations.json                
 data/BeerAdvocate/merge-cli.py                    
 data/BeerAdvocate/merge.py                        
