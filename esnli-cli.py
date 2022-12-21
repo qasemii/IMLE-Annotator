@@ -271,7 +271,7 @@ def main(argv):
     # GLOVE_PATH = '/content/gdrive/MyDrive/glove.42B.300d.txt'
     GLOVE_PATH = '/content/gdrive/MyDrive/glove.840B.300d.txt'
     # GLOVE_PATH = 'data/GloVe/glove.42B.300d.txt'
-    # GLOVE_PATH = 'data/GloVe/glove.820B.300d.txt'
+    # GLOVE_PATH = 'data/GloVe/glove.840B.300d.txt'
 
     word_vec = {}
     with open(GLOVE_PATH) as f:
