@@ -231,6 +231,7 @@ class BLSTMEncoder(nn.Module):
         self.embeddings = nn.Embedding.from_pretrained(embedding_weights, freeze=True)
 
         self.enc_lstm = nn.LSTM(self.embedding_dim, self.enc_rnn_dim, 1, bidirectional=True, dropout=self.dpout_enc)
+        self.tdl = nn.Conv2d(1, 1, (1, self.enc_rnn_dim * 2))  # Time Distributed Linear Layer
 
     def forward(self,
                 x: Tensor) -> Tensor:
@@ -243,18 +244,10 @@ class BLSTMEncoder(nn.Module):
 
         # [seqlen x batch x 2*nhid]
         output = self.enc_lstm(x_emb)[0]
+        score = self.tdl(torch.unsqueeze(output, dim=1))
+        score = score.view(64, 1, 150)
 
-        # Pooling
-        if self.pool_type == "mean":
-            # emb = torch.sum(output, 0).squeeze(0)
-            # emb = emb / sent_len.expand_as(emb)
-            pass
-        elif self.pool_type == "max":
-            emb = torch.max(output, 0)[0]
-            if emb.ndimension() == 3:
-                emb = emb.squeeze(0)
-                assert emb.ndimension() == 2, "emb.ndimension()=" + str(emb.ndimension())
-        return emb
+        return score
 
 
 class BLSTMDecoder(nn.Module):
@@ -358,7 +351,7 @@ class ClassificationModel(torch.nn.Module):
         super().__init__()
         self.gumbel_selector = BLSTMEncoder(embedding_weights=embedding_weights)
         # self.gumbel_selector = GumbelSelector(embedding_weights=embedding_weights, kernel_size=kernel_size)
-        self.prediction_model = BLSTMDecoder()
+        # self.prediction_model = BLSTMDecoder()
         self.prediction_model = MulticlassPredictionModel(embedding_weights=embedding_weights, n_classes=n_classes,
                                                           hidden_dims=hidden_dims, select_k=select_k)
         self.differentiable_select_k = differentiable_select_k
