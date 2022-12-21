@@ -214,6 +214,96 @@ class ScorePredictionModel(torch.nn.Module):
         return res
 
 
+class BLSTMEncoder(nn.Module):
+    def __init__(self,
+                 embedding_weights: Tensor,
+                 enc_rnn_dim=2048,
+                 pool_type='max',
+                 dpout_enc=0.):
+        super().__init__()
+
+        self.enc_rnn_dim = enc_rnn_dim
+        self.pool_type = pool_type
+        self.dpout_enc = dpout_enc
+
+        self.nb_words = embedding_weights.shape[0]
+        self.embedding_dim = embedding_weights.shape[1]
+        self.embeddings = nn.Embedding.from_pretrained(embedding_weights, freeze=True)
+
+        self.enc_lstm = nn.LSTM(self.embedding_dim, self.enc_rnn_dim, 1, bidirectional=True, dropout=self.dpout_enc)
+
+    def forward(self,
+                x: Tensor) -> Tensor:
+        # [B, T] -> [B, T, E]
+        x_emb = self.embeddings(x)
+
+        batch_size = x_emb.shape[0]
+        seq_len = x_emb.shape[1]
+        emb_size = x_emb.shape[2]
+
+        # [seqlen x batch x 2*nhid]
+        output = self.enc_lstm(x_emb)[0]
+
+        # Pooling
+        if self.pool_type == "mean":
+            # emb = torch.sum(output, 0).squeeze(0)
+            # emb = emb / sent_len.expand_as(emb)
+            pass
+        elif self.pool_type == "max":
+            emb = torch.max(output, 0)[0]
+            if emb.ndimension() == 3:
+                emb = emb.squeeze(0)
+                assert emb.ndimension() == 2, "emb.ndimension()=" + str(emb.ndimension())
+        return emb
+
+
+class BLSTMDecoder(nn.Module):
+    def __init__(self,
+                 nonlinear_fc=True,
+                 fc_dim=512,
+                 n_classes=3,
+                 enc_rnn_dim=2048,
+                 dpout_fc=0.):
+        super().__init__()
+
+        # classifier
+        self.nonlinear_fc = nonlinear_fc
+        self.fc_dim = fc_dim
+        self.n_classes = n_classes
+        self.enc_rnn_dim = enc_rnn_dim
+        self.dpout_fc = dpout_fc
+
+        self.inputdim = 2 * self.enc_rnn_dim
+
+        if self.nonlinear_fc:
+            self.classifier = nn.Sequential(
+                nn.Dropout(p=self.dpout_fc),
+                nn.Linear(self.inputdim, self.fc_dim),
+                nn.Tanh(),
+                nn.Dropout(p=self.dpout_fc),
+                nn.Linear(self.fc_dim, self.fc_dim),
+                nn.Tanh(),
+                nn.Dropout(p=self.dpout_fc),
+                nn.Linear(self.fc_dim, self.n_classes),
+            )
+        else:
+            self.classifier = nn.Sequential(
+                nn.Linear(self.inputdim, self.fc_dim),
+                nn.Linear(self.fc_dim, self.fc_dim),
+                nn.Linear(self.fc_dim, self.n_classes)
+            )
+
+    def forward(self, x):
+        # expl : ( Variable(T x bs x 300), lens_expl)
+        out_label = self.classifier(x)
+
+        return out_label
+
+    def encode(self, s1):
+        emb = self.encoder(s1)
+        return emb
+
+
 class MulticlassPredictionModel(torch.nn.Module):
     def __init__(self,
                  embedding_weights: Tensor,
@@ -266,7 +356,9 @@ class ClassificationModel(torch.nn.Module):
                  select_k: int,
                  differentiable_select_k: Optional[Callable[[Tensor], Tensor]] = None):
         super().__init__()
-        self.gumbel_selector = GumbelSelector(embedding_weights=embedding_weights, kernel_size=kernel_size)
+        self.gumbel_selector = BLSTMEncoder(embedding_weights=embedding_weights)
+        # self.gumbel_selector = GumbelSelector(embedding_weights=embedding_weights, kernel_size=kernel_size)
+        self.prediction_model = BLSTMDecoder()
         self.prediction_model = MulticlassPredictionModel(embedding_weights=embedding_weights, n_classes=n_classes,
                                                           hidden_dims=hidden_dims, select_k=select_k)
         self.differentiable_select_k = differentiable_select_k
