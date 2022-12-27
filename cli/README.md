@@ -4,7 +4,7 @@ Run the following command in your terminal to reach results in
 [this](https://arxiv.org/pdf/2209.04862.pdf) paper.
 
 ```bash
-PYTHONPATH=. python3 ./cli/torch-cli.py -a 0 -e 20 -b 40 -k 3 -H 250 -m 350 
+PYTHONPATH=. python3 ./cli/beer-cli.py -a 0 -e 20 -b 40 -k 3 -H 250 -m 350 
 -K 5 -r 10 -M imle --aimle-target standard --imle-samples 1 --imle-noise gumbel 
 --imle-input-temperature 1.0 --imle-output-temperature 1.0 --imle-lambda 1000.0 
 --sst-temperature 0.0 --softsub-temperature 0.5 --ste-noise sog --ste-temperature 0.0 
@@ -14,7 +14,7 @@ PYTHONPATH=. python3 ./cli/torch-cli.py -a 0 -e 20 -b 40 -k 3 -H 250 -m 350
 
 The following command is to run model on esnli dataset
 ```bash
-PYTHONPATH=. python3 ./cli/torch-cli.py -e 20 -b 40 -k 3 -H 250 -m 350 
+PYTHONPATH=. python3 ./cli/beer-cli.py -e 20 -b 40 -k 3 -H 250 -m 350 
 -K 5 -r 10 -M imle --aimle-target standard --imle-samples 1 --imle-noise gumbel 
 --imle-input-temperature 1.0 --imle-output-temperature 1.0 --imle-lambda 1000.0 
 --sst-temperature 0.0 --softsub-temperature 0.5 --ste-noise sog --ste-temperature 0.0 
