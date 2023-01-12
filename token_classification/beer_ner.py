@@ -17,13 +17,12 @@ from transformers import (
     set_seed,
 )
 # data ################################################
-
-aspect = 0
+aspect = 1
 
 data = {'tokens': [],
         'labels': []}
 
-with open("data/BeerAdvocate/annotations.json") as fin:
+with open("../data/BeerAdvocate/annotations.json") as fin:
     for line in fin:
         sample = json.loads(line)
         data['tokens'].append(sample['x'])
@@ -249,13 +248,15 @@ predict_dataset = predict_dataset.map(
     desc="Running tokenizer on prediction dataset")
 
 predictions, labels, metrics = trainer.predict(predict_dataset, metric_key_prefix="predict")
-predictions = np.argmax(predictions, axis=2)
+
+predicted_labels = torch.from_numpy(np.argmax(predictions, axis=2))
+predicted_probs = torch.nn.Softmax(dim=2)(torch.from_numpy(predictions))[:, :, 1]
 
 # Remove ignored index (special tokens)
-true_predictions = [
-    [label_list[p] for (p, l) in zip(prediction, label) if l != -100]
-    for prediction, label in zip(predictions, labels)
-]
+# true_predictions = [
+#     [label_list[p] for (p, l) in zip(prediction, label) if l != -100]
+#     for prediction, label in zip(predictions, labels)
+# ]
 
 trainer.log_metrics("predict", metrics)
 trainer.save_metrics("predict", metrics)
