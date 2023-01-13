@@ -285,6 +285,7 @@ completed_steps = 0
 starting_epoch = 0
 
 # Train
+print('Training Process ...')
 resume_from_checkpoint = None
 for epoch in range(starting_epoch, num_train_epochs):
     model.train()
@@ -310,18 +311,10 @@ for epoch in range(starting_epoch, num_train_epochs):
         with torch.no_grad():
             outputs = model(**batch)
         predictions = outputs.logits.argmax(dim=-1)
+        # predicted_probs = torch.nn.Softmax(dim=2)(torch.from_numpy(outputs.logit))[:, :, 1]
+
         labels = batch["labels"]
-        # if not pad_to_max_length:  # necessary to pad predictions and labels for being gathered
-        #     predictions = torch.nn.utils.rnn.pad_sequences(predictions, batch_first=True, pad_index=-100)
-        #     labels = torch.nn.utils.rnn.pad_sequences(labels, batch_first=True, pad_index=-100)
-        # predictions_gathered, labels_gathered = accelerator.gather((predictions, labels))
-        # # If we are in a multiprocess environment, the last batch has duplicates
-        # if accelerator.num_processes > 1:
-        #     if step == len(eval_dataloader) - 1:
-        #         predictions_gathered = predictions_gathered[: len(eval_dataloader.dataset) - samples_seen]
-        #         labels_gathered = labels_gathered[: len(eval_dataloader.dataset) - samples_seen]
-        #     else:
-        #         samples_seen += labels_gathered.shape[0]
+
         preds, refs = get_labels(predictions, labels)
         metric.add_batch(
             predictions=preds,
@@ -334,28 +327,21 @@ for epoch in range(starting_epoch, num_train_epochs):
 # #######################################################################
 # Test
 print('Evaluating Test Set ...')
+metric = evaluate.load('seqeval')
 
 eval_dataset = processed_raw_datasets["test"]
 
-batch_size = len(eval_dataset)
+batch_size = eval_dataset.__len__()
 eval_dataloader = DataLoader(eval_dataset, collate_fn=data_collator, batch_size=batch_size)
+# getting the whole dataset in one batch
+batch = next(iter(eval_dataloader))
 
 model.eval()
 with torch.no_grad():
     outputs = model(**batch)
 predictions = outputs.logits.argmax(dim=-1)
 labels = batch["labels"]
-# if not pad_to_max_length:  # necessary to pad predictions and labels for being gathered
-#     predictions = torch.nn.utils.rnn.pad_sequences(predictions, batch_first=True, pad_index=-100)
-#     labels = torch.nn.utils.rnn.pad_sequences(labels, batch_first=True, pad_index=-100)
-# predictions_gathered, labels_gathered = accelerator.gather((predictions, labels))
-# # If we are in a multiprocess environment, the last batch has duplicates
-# if accelerator.num_processes > 1:
-#     if step == len(eval_dataloader) - 1:
-#         predictions_gathered = predictions_gathered[: len(eval_dataloader.dataset) - samples_seen]
-#         labels_gathered = labels_gathered[: len(eval_dataloader.dataset) - samples_seen]
-#     else:
-#         samples_seen += labels_gathered.shape[0]
+
 preds, refs = get_labels(predictions, labels)
 metric.add_batch(
     predictions=preds,
