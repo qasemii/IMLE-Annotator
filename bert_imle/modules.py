@@ -1,13 +1,11 @@
 import torch
-from torch import nn, Tensor
-from torch.distributions.gamma import Gamma
-
-from torch.distributions import Uniform
-
 import math
 
+from torch import nn, Tensor
+from typing import Optional, Tuple, Callable
 
-# weight initialization
+
+# Weight initializer
 def init(layer: nn.Module):
     if isinstance(layer, nn.Conv1d) or isinstance(layer, nn.Linear):
         torch.nn.init.xavier_uniform_(layer.weight, gain=nn.init.calculate_gain('relu'))
@@ -15,7 +13,20 @@ def init(layer: nn.Module):
     else:
         assert f'Do not know how to deal with {type(layer)}'
 
+# Differentiable select-k model
+class DifferentiableSelectKModel(torch.nn.Module):
+    def __init__(self,
+                 diff_fun: Callable[[Tensor], Tensor],
+                 fun: Callable[[Tensor], Tensor]):
+        super().__init__()
+        self.diff_fun = diff_fun
+        self.fun = fun
 
+    def forward(self, logits: Tensor) -> Tensor:
+        return self.diff_fun(logits) if self.training else self.fun(logits)
+
+
+# prediction model
 class Predictor(torch.nn.Module):
     def __init__(self, embedding_weights: Tensor,
                  hidden_dims: int,
