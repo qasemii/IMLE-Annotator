@@ -4,7 +4,7 @@ import numpy as np
 from datasets import Dataset, DatasetDict
 
 import torch
-
+from torch import optim, Tensor
 from torch.utils.data import DataLoader
 
 import evaluate
@@ -13,12 +13,17 @@ from transformers import (
     AutoModelForTokenClassification,
     AutoTokenizer,
     DataCollatorForTokenClassification,
+    DataCollatorWithPadding,
     get_scheduler,
 )
 
-from bert_imle.modules import *
-from bert_imle.target import *
+from typing import Optional, Tuple, Callable
 
+from imle.imle import imle
+from modules import DifferentiableSelectKModel, Model
+from solvers import mathias_select_k
+from target import TargetDistribution
+from noise import SumOfGammaNoiseDistribution
 
 device = "gpu" if torch.cuda.is_available() else "cpu"
 
@@ -34,12 +39,12 @@ select_k = 5
 checkpoint_path = 'models/model.pt'
 
 # data loading
-input_path_train = "/content/imle-annotator/data/BeerAdvocate/reviews.aspect" + str(aspect) + ".train.txt"
-input_path_validation = "/content/imle-annotator/data/BeerAdvocate/reviews.aspect" + str(aspect) + ".heldout.txt"
+input_path_train = "../data/BeerAdvocate/reviews.aspect" + str(aspect) + ".train.txt"
+input_path_validation = "../data/BeerAdvocate/reviews.aspect" + str(aspect) + ".heldout.txt"
 
 # the dictionary mapping words to their IDs
 token_id_counter = 3
-word_to_id = {'<PAD>':0, '<START>':1, '<UNK>':2}
+word_to_id = {'<PAD>': 0, '<START>': 1, '<UNK>': 2}
 
 # Preparing train data
 train_data = {'tokens': [], 'labels': []}
@@ -58,7 +63,7 @@ with open(input_path_train) as fin:
 
 # Preparing train data
 validation_data = {'tokens': [], 'labels': []}
-with open(input_path_train) as fin:
+with open(input_path_validation) as fin:
     for line in fin:
         y, sep, text = line.partition("\t")
         tokens = text.split(" ")
@@ -66,23 +71,7 @@ with open(input_path_train) as fin:
         labels = [float(v) for v in y.split()]
         validation_data['labels'].append(labels[aspect])
 
-
 id_to_word = {value: key for key, value in word_to_id.items()}
-
-# this cell loads the word embeddings from the external data
-embeddings = {}
-with open("/content/gdrive/MyDrive/review+wiki.filtered.200.txt") as f:
-    for line in f:
-        values = line.split()
-        word = values[0]
-        embeddings[word] = np.asarray(values[1:], dtype='float32')
-
-embedding_matrix = torch.zeros((len(word_to_id) + 1, embedding_dims), dtype=torch.float, requires_grad=False, device=device)
-for word, i in word_to_id.items():
-    embedding_vector = embeddings.get(word)
-    if embedding_vector is not None:
-        embedding_matrix[i] = embedding_vector
-        # words not found in embedding index will be all-zeros.
 
 # Prepare data as Dataset object
 train_dataset = Dataset.from_dict(train_data)
@@ -111,114 +100,90 @@ for idx, label in enumerate(label_list):
 
 # Initializing the bert model
 model_name_or_path = 'bert-base-uncased'
-tokenizer_name_or_path = model_name_or_path
-
-task_name = 'ner'
-cache_dir = None
-model_revision = 'main'
-use_auth_token = False
 
 config = AutoConfig.from_pretrained(
     model_name_or_path,
+    output_hidden_states=True,
     num_labels=num_labels)
 
 tokenizer = AutoTokenizer.from_pretrained(
-    tokenizer_name_or_path,
-    use_fast=True)
-
-bert_model = AutoModelForTokenClassification.from_pretrained(
     model_name_or_path,
-    from_tf=bool(".ckpt" in model_name_or_path),
-    config=config)
-
-# intializing differentiable select_k model
-blackbox_function = lambda logits: mathias_select_k(logits, select_k=select_k)
-
-nb_samples = args.imle_samples
-imle_input_temp = args.imle_input_temperature
-imle_output_temp = args.imle_output_temperature
-imle_lambda = args.imle_lambda
-
-target_distribution = TargetDistribution(alpha=1.0, beta=imle_lambda, do_gradient_scaling=args.gradient_scaling)
-noise_distribution = SumOfGammaNoiseDistribution(k=select_k, nb_iterations=10, device=device)
-
-@imle(target_distribution=target_distribution, noise_distribution=noise_distribution, nb_samples=nb_samples,
-      theta_noise_temperature=imle_input_temp, target_noise_temperature=imle_output_temp)
-def imle_select_k(logits: Tensor) -> Tensor:
-    return mathias_select_k(logits, select_k=select_k)
-
-differentiable_select_k = DifferentiableSelectKModel(imle_select_k, blackbox_function)
-
-select_k_model =
-
-# intializing prediction model
-predict_model = Predictor(
-    embedding_weights=embedding_matrix ,
-    hidden_dims=hidden_dims,
-    select_k=select_k)
+    use_fast=True)
 
 # #######################################################################
 
-max_length = 128
+max_length = 350
 padding = False
 label_all_tokens = False
 
-# Tokenize all texts and align the labels with them.
-def tokenize_and_align_labels(examples):
+
+def tokenize(example):
     tokenized_inputs = tokenizer(
-        examples['tokens'],
+        example['tokens'],
         max_length=max_length,
         padding=padding,
         truncation=True,
-        # We use this argument because the texts in our dataset are lists of words (with a label for each word).
         is_split_into_words=True,
     )
-
-    labels = []
-    for i, label in enumerate(examples['labels']):
-        word_ids = tokenized_inputs.word_ids(batch_index=i)
-        previous_word_idx = None
-        label_ids = []
-        for word_idx in word_ids:
-            # Special tokens have a word id that is None. We set the label to -100 so they are automatically
-            # ignored in the loss function.
-            if word_idx is None:
-                label_ids.append(-100)
-            # We set the label for the first token of each word.
-            elif word_idx != previous_word_idx:
-                label_ids.append(label2id[label[word_idx]])
-            # For the other tokens in a word, we set the label to either the current label or -100, depending on
-            # the label_all_tokens flag.
-            else:
-                if label_all_tokens:
-                    label_ids.append(b_to_i_label[label2id[label[word_idx]]])
-                else:
-                    label_ids.append(-100)
-            previous_word_idx = word_idx
-
-        labels.append(label_ids)
-    tokenized_inputs["labels"] = labels
+    tokenized_inputs["scores"] = example['labels']
     return tokenized_inputs
 
 
 # tokenize and align the whole dataset
 processed_raw_datasets = dataset.map(
-    tokenize_and_align_labels,
+    tokenize,
     batched=True,
     remove_columns=dataset["train"].column_names,
-    desc="Running tokenizer on dataset")
+    desc="Running tokenizer on dataset",
+)
 
 train_dataset = processed_raw_datasets["train"]
 eval_dataset = processed_raw_datasets["validation"]
 
 # Data collator
 use_fp16 = False
-data_collator = DataCollatorForTokenClassification(tokenizer, pad_to_multiple_of=8 if use_fp16 else None)
+data_collator = DataCollatorWithPadding(tokenizer, pad_to_multiple_of=8 if use_fp16 else None)
 
 # Data Loader
 batch_size = 128
 train_dataloader = DataLoader(train_dataset, shuffle=True, collate_fn=data_collator, batch_size=batch_size)
 eval_dataloader = DataLoader(eval_dataset, collate_fn=data_collator, batch_size=batch_size)
+
+# #######################################################################
+# Model
+
+# initializing differentiable select_k model
+blackbox_function = lambda logits: mathias_select_k(logits, select_k=select_k)
+
+nb_samples = 1
+imle_input_temp = 0.0
+imle_output_temp = 10.0
+imle_lambda = 1000.0
+gradient_scaling = False
+
+target_distribution = TargetDistribution(alpha=1.0, beta=imle_lambda, do_gradient_scaling=gradient_scaling)
+noise_distribution = SumOfGammaNoiseDistribution(select_k=select_k, nb_iterations=10, device=device)
+
+
+@imle(
+    nb_samples=nb_samples,
+    target_distribution=target_distribution,
+    noise_distribution=noise_distribution,
+    theta_noise_temperature=imle_input_temp,
+    target_noise_temperature=imle_output_temp)
+def imle_select_k(logits: Tensor) -> Tensor:
+    return mathias_select_k(logits, select_k=select_k)
+
+
+select_k_model = DifferentiableSelectKModel(imle_select_k, blackbox_function)
+
+# Initializing model
+model = Model(
+    model_name_or_path=model_name_or_path,
+    config=config,
+    hidden_dims=hidden_dims,
+    select_k=select_k,
+    differentiable_select_k=select_k_model)
 
 # #######################################################################
 # Optimizer
@@ -230,15 +195,13 @@ learning_rate = 5e-5
 no_decay = ["bias", "LayerNorm.weight"]
 optimizer_grouped_parameters = [
     {
-        "params": [p for n, p in bert_model.named_parameters() if not any(nd in n for nd in no_decay)],
-        "weight_decay": weight_decay,
-    },
-    {
-        "params": [p for n, p in bert_model.named_parameters() if any(nd in n for nd in no_decay)],
-        "weight_decay": 0.0,
-    },
+        "params": [p for n, p in model.named_parameters() if not any(nd in n for nd in no_decay)],
+        "weight_decay": weight_decay
+    }
 ]
 optimizer = torch.optim.AdamW(optimizer_grouped_parameters, lr=learning_rate)
+
+# optimizer = optim.Adam(model.parameters(), lr=0.001, eps=1e-7)
 
 # # Use the device given by the `accelerator` object.
 # device = accelerator.device
@@ -273,38 +236,12 @@ if overrode_max_train_steps:
 # Afterwards we recalculate our number of training epochs
 num_train_epochs = math.ceil(max_train_steps / num_update_steps_per_epoch)
 
-# Figure out how many steps we should save the Accelerator states
-if checkpointing_steps is not None and checkpointing_steps.isdigit():
-    checkpointing_steps = int(checkpointing_steps)
-
 # #######################################################################
 import numpy as np
 
 # Metrics
-metric = torch.nn.MSELoss()
-
-return_entity_level_metrics = False
-
-def get_labels(predictions, references):
-    # Transform predictions and references tensos to numpy arrays
-    if device == "cpu":
-        y_pred = predictions.detach().clone().numpy()
-        y_true = references.detach().clone().numpy()
-    else:
-        y_pred = predictions.detach().cpu().clone().numpy()
-        y_true = references.detach().cpu().clone().numpy()
-
-    # Remove ignored index (special tokens)
-    true_predictions = [
-        [label_list[p] for (p, l) in zip(pred, gold_label) if l != -100]
-        for pred, gold_label in zip(y_pred, y_true)
-    ]
-    true_labels = [
-        [label_list[l] for (p, l) in zip(pred, gold_label) if l != -100]
-        for pred, gold_label in zip(y_pred, y_true)
-    ]
-    return true_predictions, true_labels
-
+# metric = torch.nn.MSELoss()
+metric = evaluate.load('mse')
 
 def compute_metrics():
     results = metric.compute()
@@ -325,13 +262,10 @@ def compute_metrics():
             "f1": results["overall_f1"],
             "accuracy": results["overall_accuracy"],
         }
-
-
 # #######################################################################
 per_device_train_batch_size = 8
 num_processes = 3
 pad_to_max_length = False
-
 
 # Only show the progress bar once on each machine.
 # progress_bar = tqdm(range(max_train_steps), disable=not accelerator.is_local_main_process)
@@ -342,14 +276,21 @@ starting_epoch = 0
 print('Training Process ...')
 resume_from_checkpoint = None
 for epoch in range(starting_epoch, num_train_epochs):
-    bert_model.train()
+    model.train()
     for step, batch in enumerate(train_dataloader):
-        outputs = bert_model(**batch)
-        loss = outputs.loss
+        scores = batch.data['scores']
+        batch.data.pop('scores')
+        # [B, ]
+        outputs = model(**batch).squeeze()
+
+        loss = metric.compute(
+            predictions=outputs,
+            references=scores
+        )
         loss = loss / gradient_accumulation_steps
 
         loss.backward()
-        # print(loss)
+        print(loss)
         if step % gradient_accumulation_steps == 0 or step == len(train_dataloader) - 1:
             optimizer.step()
             lr_scheduler.step()
@@ -359,51 +300,39 @@ for epoch in range(starting_epoch, num_train_epochs):
         if completed_steps >= max_train_steps:
             break
 
-    bert_model.eval()
+    model.eval()
     samples_seen = 0
     for step, batch in enumerate(eval_dataloader):
+        scores = batch.data['scores']
+        batch.data.pop('scores')
         with torch.no_grad():
-            outputs = bert_model(**batch)
-        predictions = outputs.logits.argmax(dim=-1)
-        # predicted_probs = torch.nn.Softmax(dim=2)(torch.from_numpy(outputs.logit))[:, :, 1]
+            # [B, ]
+            outputs = model(**batch).squeeze()
 
-        labels = batch["labels"]
-
-        preds, refs = get_labels(predictions, labels)
         metric.add_batch(
-            predictions=preds,
-            references=refs,
-        )  # predictions and preferences are expected to be a nested list of labels, not label_ids
+            predictions=outputs,
+            references=scores,
+        )
 
-    eval_metric = compute_metrics()
-    print(f"epoch {epoch}:", eval_metric)
+    print(f"epoch {epoch}:", metric.compute())
 
 # #######################################################################
-# Test
-print('Evaluating Test Set ...')
-metric = evaluate.load('seqeval')
-
-eval_dataset = processed_raw_datasets["test"]
-
-batch_size = eval_dataset.__len__()
-eval_dataloader = DataLoader(eval_dataset, collate_fn=data_collator, batch_size=batch_size)
-# getting the whole dataset in one batch
-batch = next(iter(eval_dataloader))
-
-bert_model.eval()
-with torch.no_grad():
-    outputs = bert_model(**batch)
-predictions = outputs.logits.argmax(dim=-1)
-labels = batch["labels"]
-
-preds, refs = get_labels(predictions, labels)
-metric.add_batch(
-    predictions=preds,
-    references=refs,
-)  # predictions and preferences are expected to be a nested list of labels, not label_ids
-
-test_metric = compute_metrics()
-print(f"Test Metrics:", test_metric)
+# # Test
+# print('Evaluating Test Set ...')
+# metric = evaluate.load('seqeval')
+#
+# eval_dataset = processed_raw_datasets["test"]
+#
+# batch_size = eval_dataset.__len__()
+# eval_dataloader = DataLoader(eval_dataset, collate_fn=data_collator, batch_size=batch_size)
+# # getting the whole dataset in one batch
+# batch = next(iter(eval_dataloader))
+#
+# model.eval()
+# with torch.no_grad():
+#     outputs = model(**batch)
+#
+# pass
 # #######################################################################
 print('Experiment completed.')
 # #######################################################################
