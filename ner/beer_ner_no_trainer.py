@@ -81,7 +81,12 @@ for idx, label in enumerate(label_list):
     else:
         b_to_i_label.append(idx)
 
-model_name_or_path = 'bert-base-uncased'
+# model_name_or_path = 'bert-base-uncased'
+# model_name_or_path = 'distilbert-base-uncased'
+model_name_or_path = 'albert-base-v1'
+
+
+
 tokenizer_name_or_path = model_name_or_path
 
 # XXX: what if we have binary token classification instead?
@@ -195,7 +200,7 @@ optimizer = torch.optim.AdamW(optimizer_grouped_parameters, lr=learning_rate)
 overrode_max_train_steps = False
 gradient_accumulation_steps = 1
 max_train_steps = None
-num_train_epochs = 3
+num_train_epochs = 1
 lr_scheduler_type = 'linear'
 num_warmup_steps = 0
 checkpointing_steps = None
