@@ -87,7 +87,7 @@ class Model(torch.nn.Module):
             hidden_dims=hidden_dims,
             select_k=select_k)
 
-    def z(self, **kwargs) -> tuple[Tensor, Any]:
+    def z(self, **kwargs) -> tuple:
         # prediction includes score for labels in ['O', 'B-Xxx', 'I-Xxx']
         bert_output = self.bert_model(**kwargs)
         predictions = bert_output.logits
