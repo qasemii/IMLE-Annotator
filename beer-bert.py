@@ -272,11 +272,14 @@ resume_from_checkpoint = None
 for epoch in range(starting_epoch, num_train_epochs):
     model.train()
     for step, batch in enumerate(train_dataloader):
+        print('step 1')
         scores = batch.data['scores']
         batch.data.pop('scores')
         # [B, ]
+        print('step 2')
         outputs = model(**batch).squeeze()
 
+        print('step 3')
         loss = metric(outputs, scores)
         loss = loss / gradient_accumulation_steps
         loss.backward()
