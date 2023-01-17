@@ -42,37 +42,59 @@ checkpoint_path = 'models/model.pt'
 input_path_train = "data/BeerAdvocate/reviews.aspect" + str(aspect) + ".train.txt"
 input_path_validation = "data/BeerAdvocate/reviews.aspect" + str(aspect) + ".heldout.txt"
 
-# Preparing train data
-train_data = {'tokens': [], 'labels': []}
-with open(input_path_train) as fin:
+# # Preparing train data
+# train_data = {'tokens': [], 'labels': []}
+# with open(input_path_train) as fin:
+#     for line in fin:
+#         y, sep, text = line.partition("\t")
+#         tokens = text.split(" ")
+#         train_data['tokens'].append(tokens)
+#         labels = [float(v) for v in y.split()]
+#         train_data['labels'].append(labels[aspect])
+#
+# # Preparing train data
+# validation_data = {'tokens': [], 'labels': []}
+# with open(input_path_validation) as fin:
+#     for line in fin:
+#         y, sep, text = line.partition("\t")
+#         tokens = text.split(" ")
+#         validation_data['tokens'].append(tokens)
+#         labels = [float(v) for v in y.split()]
+#         validation_data['labels'].append(labels[aspect])
+#
+#
+# # Prepare data as Dataset object
+# train_dataset = Dataset.from_dict(train_data)
+# validation_dataset = Dataset.from_dict(validation_data)
+# test_valid_dataset = validation_dataset.train_test_split(test_size=0.5)
+#
+# # Creating Dataset object
+# dataset = DatasetDict({
+#     'train': train_dataset,
+#     'validation': test_valid_dataset['train'],
+#     'test': test_valid_dataset['test']})
+
+data = {'tokens': [],
+        'labels': []}
+
+with open("data/BeerAdvocate/annotations.json") as fin:
     for line in fin:
-        y, sep, text = line.partition("\t")
-        tokens = text.split(" ")
-        train_data['tokens'].append(tokens)
-        labels = [float(v) for v in y.split()]
-        train_data['labels'].append(labels[aspect])
+        sample = json.loads(line)
+        data['tokens'].append(sample['x'])
+        data['labels'].append(sample['y'][aspect])
 
-# Preparing train data
-validation_data = {'tokens': [], 'labels': []}
-with open(input_path_validation) as fin:
-    for line in fin:
-        y, sep, text = line.partition("\t")
-        tokens = text.split(" ")
-        validation_data['tokens'].append(tokens)
-        labels = [float(v) for v in y.split()]
-        validation_data['labels'].append(labels[aspect])
+# Whole data as a dataset object
+raw_dataset = Dataset.from_dict(data)
 
+# 90% train, 10% (test + validation)
+train_test_valid = raw_dataset.train_test_split(test_size=0.1)
+test_valid = train_test_valid['test'].train_test_split(test_size=0.5)
 
-# Prepare data as Dataset object
-train_dataset = Dataset.from_dict(train_data)
-validation_dataset = Dataset.from_dict(validation_data)
-test_valid_dataset = validation_dataset.train_test_split(test_size=0.5)
-
-# Creating Dataset object
+# Generating divided dataset dictionary
 dataset = DatasetDict({
-    'train': train_dataset,
-    'validation': test_valid_dataset['train'],
-    'test': test_valid_dataset['test']})
+    'train': train_test_valid['train'],
+    'validation': test_valid['train'],
+    'test': test_valid['test']})
 
 label_list = ['O', 'B-SELECTED', 'I-SELECTED']
 num_labels = len(label_list)
@@ -89,7 +111,8 @@ for idx, label in enumerate(label_list):
         b_to_i_label.append(idx)
 
 # Initializing the bert model
-model_name_or_path = 'bert-base-uncased'
+# model_name_or_path = 'bert-base-uncased'
+model_name_or_path = 'albert-base-v1'
 
 config = AutoConfig.from_pretrained(
     model_name_or_path,
@@ -135,7 +158,7 @@ use_fp16 = False
 data_collator = DataCollatorWithPadding(tokenizer, pad_to_multiple_of=8 if use_fp16 else None)
 
 # Data Loader
-batch_size = 128
+batch_size = 64
 train_dataloader = DataLoader(train_dataset, shuffle=True, collate_fn=data_collator, batch_size=batch_size)
 eval_dataloader = DataLoader(eval_dataset, collate_fn=data_collator, batch_size=batch_size)
 
