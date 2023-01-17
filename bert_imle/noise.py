@@ -1,3 +1,15 @@
+import math
+
+import torch
+from torch import Tensor, Size
+from torch.distributions.gamma import Gamma
+from torch.distributions.gumbel import Gumbel
+
+from abc import ABC, abstractmethod
+
+from typing import Optional
+
+
 class BaseNoiseDistribution(ABC):
     def __init__(self):
         super().__init__()
@@ -19,22 +31,22 @@ class SumOfGammaNoiseDistribution(BaseNoiseDistribution):
     Example::
 
         >>> import torch
-        >>> noise_distribution = SumOfGammaNoiseDistribution(k=5, nb_iterations=100)
+        >>> noise_distribution = SumOfGammaNoiseDistribution(select_k=5, nb_iterations=100)
         >>> noise_distribution.sample(torch.Size([5]))
         tensor([ 0.2504,  0.0112,  0.5466,  0.0051, -0.1497])
 
     Args:
-        k (float): k parameter -- see [1] for more details.
+        select_k (float): k parameter -- see [1] for more details.
         nb_iterations (int): number of iterations for estimating the sample.
         device (torch.devicde): device where to store samples.
     """
 
     def __init__(self,
-                 k: float,
+                 select_k: float,
                  nb_iterations: int = 10,
                  device: Optional[torch.device] = None):
         super().__init__()
-        self.k = k
+        self.k = select_k
         self.nb_iterations = nb_iterations
         self.device = device
 
