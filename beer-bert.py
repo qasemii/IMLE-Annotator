@@ -39,12 +39,8 @@ select_k = 5
 checkpoint_path = 'models/model.pt'
 
 # data loading
-input_path_train = "/content/imle-annotator/data/BeerAdvocate/reviews.aspect" + str(aspect) + ".train.txt"
-input_path_validation = "/content/imle-annotator/data/BeerAdvocate/reviews.aspect" + str(aspect) + ".heldout.txt"
-
-# the dictionary mapping words to their IDs
-token_id_counter = 3
-word_to_id = {'<PAD>': 0, '<START>': 1, '<UNK>': 2}
+input_path_train = "data/BeerAdvocate/reviews.aspect" + str(aspect) + ".train.txt"
+input_path_validation = "data/BeerAdvocate/reviews.aspect" + str(aspect) + ".heldout.txt"
 
 # Preparing train data
 train_data = {'tokens': [], 'labels': []}
@@ -56,11 +52,6 @@ with open(input_path_train) as fin:
         labels = [float(v) for v in y.split()]
         train_data['labels'].append(labels[aspect])
 
-        for token in tokens:
-            if token not in word_to_id:
-                word_to_id[token] = token_id_counter
-                token_id_counter = token_id_counter + 1
-
 # Preparing train data
 validation_data = {'tokens': [], 'labels': []}
 with open(input_path_validation) as fin:
@@ -71,7 +62,6 @@ with open(input_path_validation) as fin:
         labels = [float(v) for v in y.split()]
         validation_data['labels'].append(labels[aspect])
 
-id_to_word = {value: key for key, value in word_to_id.items()}
 
 # Prepare data as Dataset object
 train_dataset = Dataset.from_dict(train_data)
@@ -240,28 +230,9 @@ num_train_epochs = math.ceil(max_train_steps / num_update_steps_per_epoch)
 import numpy as np
 
 # Metrics
-# metric = torch.nn.MSELoss()
-metric = evaluate.load('mse')
+metric = torch.nn.MSELoss()
+mse_metric = evaluate.load('mse')
 
-def compute_metrics():
-    results = metric.compute()
-    if return_entity_level_metrics:
-        # Unpack nested dictionaries
-        final_results = {}
-        for key, value in results.items():
-            if isinstance(value, dict):
-                for n, v in value.items():
-                    final_results[f"{key}_{n}"] = v
-            else:
-                final_results[key] = value
-        return final_results
-    else:
-        return {
-            "precision": results["overall_precision"],
-            "recall": results["overall_recall"],
-            "f1": results["overall_f1"],
-            "accuracy": results["overall_accuracy"],
-        }
 # #######################################################################
 per_device_train_batch_size = 8
 num_processes = 3
@@ -283,14 +254,11 @@ for epoch in range(starting_epoch, num_train_epochs):
         # [B, ]
         outputs = model(**batch).squeeze()
 
-        loss = metric.compute(
-            predictions=outputs,
-            references=scores
-        )
+        loss = metric(outputs, scores)
         loss = loss / gradient_accumulation_steps
-
         loss.backward()
         print(loss)
+
         if step % gradient_accumulation_steps == 0 or step == len(train_dataloader) - 1:
             optimizer.step()
             lr_scheduler.step()
@@ -309,12 +277,12 @@ for epoch in range(starting_epoch, num_train_epochs):
             # [B, ]
             outputs = model(**batch).squeeze()
 
-        metric.add_batch(
+        mse_metric.add_batch(
             predictions=outputs,
             references=scores,
         )
 
-    print(f"epoch {epoch}:", metric.compute())
+    print(f"epoch {epoch}:", mse_metric.compute())
 
 # #######################################################################
 # # Test
