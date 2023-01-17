@@ -77,7 +77,7 @@ input_path_validation = "data/BeerAdvocate/reviews.aspect" + str(aspect) + ".hel
 data = {'tokens': [],
         'labels': []}
 
-with open("data/BeerAdvocate/annotations.json") as fin:
+with open("/content/imle-annotator/data/BeerAdvocate/annotations.json") as fin:
     for line in fin:
         sample = json.loads(line)
         data['tokens'].append(sample['x'])
