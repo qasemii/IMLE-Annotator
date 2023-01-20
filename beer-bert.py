@@ -25,7 +25,7 @@ from bert_imle.solvers import mathias_select_k
 from bert_imle.target import TargetDistribution
 from bert_imle.noise import SumOfGammaNoiseDistribution
 
-device = "gpu" if torch.cuda.is_available() else "cpu"
+device = "cuda" if torch.cuda.is_available() else "cpu"
 
 # arguments
 aspect = 1
@@ -77,7 +77,7 @@ checkpoint_path = 'models/model.pt'
 data = {'tokens': [],
         'labels': []}
 
-with open("/content/imle-annotator/data/BeerAdvocate/annotations.json") as fin:
+with open("data/BeerAdvocate/annotations.json") as fin:
     for line in fin:
         sample = json.loads(line)
         data['tokens'].append(sample['x'])
@@ -225,7 +225,7 @@ optimizer = torch.optim.AdamW(optimizer_grouped_parameters, lr=learning_rate)
 overrode_max_train_steps = False
 gradient_accumulation_steps = 1
 max_train_steps = None
-num_train_epochs = 1
+num_train_epochs = 5
 lr_scheduler_type = 'linear'
 num_warmup_steps = 0
 checkpointing_steps = None
@@ -272,14 +272,11 @@ resume_from_checkpoint = None
 for epoch in range(starting_epoch, num_train_epochs):
     model.train()
     for step, batch in enumerate(train_dataloader):
-        print('step 1')
         scores = batch.data['scores']
         batch.data.pop('scores')
         # [B, ]
-        print('step 2')
         outputs = model(**batch).squeeze()
 
-        print('step 3')
         loss = metric(outputs, scores)
         loss = loss / gradient_accumulation_steps
         loss.backward()
@@ -308,7 +305,7 @@ for epoch in range(starting_epoch, num_train_epochs):
             references=scores,
         )
 
-    print(f"epoch {epoch}:", mse_metric.compute())
+    print(f"epoch {epoch}: {mse_metric.compute()}\n-----------------")
 
 # #######################################################################
 # # Test
