@@ -33,11 +33,16 @@ class DifferentiableSelectKModel(torch.nn.Module):
 # prediction model
 class Predictor(torch.nn.Module):
     def __init__(self,
+                 embedding_matrix,
                  embedding_dims,
                  hidden_dims: int,
                  select_k: int):
         super().__init__()
-        self.embedding_dims = embedding_dims
+        if embedding_matrix is None:
+            self.embedding_dims = embedding_dims
+        else:
+            self.embedding_dims = embedding_matrix.shape[1]
+
         self.hidden_dims = hidden_dims
         self.select_k = float(select_k)
 
@@ -50,9 +55,12 @@ class Predictor(torch.nn.Module):
         self.activation = nn.ReLU()
         self.output_activation = nn.Sigmoid()
 
-    def forward(self, embedding_weights: Tensor) -> Tensor:
-        # x_emb = self.embeddings(x)  # [B, T] -> [B, T, E]
-        # res = x_emb * mask  # [B, S, E]
+    def forward(self,
+            token_masks,
+            token_embeddings,
+            embedding_weights: Tensor) -> Tensor:
+        x_emb = self.embeddings(x)  # [B, T] -> [B, T, E]
+        res = x_emb * mask  # [B, S, E]
 
         res = torch.sum(embedding_weights, dim=1) / self.select_k  # [B, E]
         res = self.layer_1(res)  # [B, H]
@@ -69,6 +77,7 @@ class Model(torch.nn.Module):
                  config,
                  hidden_dims: int,
                  select_k: int,
+                 embedding_matrix=None,
                  differentiable_select_k: Optional[Callable[[Tensor], Tensor]] = None):
         super().__init__()
 
@@ -83,7 +92,8 @@ class Model(torch.nn.Module):
 
         # FC Predictor
         self.predictor = Predictor(
-            embedding_dims=128,
+            embedding_matrix=embedding_matrix,
+            embedding_dims=768,
             hidden_dims=hidden_dims,
             select_k=select_k)
 
@@ -99,13 +109,17 @@ class Model(torch.nn.Module):
 
         # (for now) we consider BERT last layer embeddings as word embeddings
         seq_embeddings = bert_output.hidden_states[0]
-        embedding_weights = seq_embeddings * token_masks
-        return token_masks, embedding_weights
+        token_embeddings = seq_embeddings * token_masks
+        return token_masks, token_embeddings
 
-    def forward(self, **kwargs) -> Tensor:
+    def forward(self, embedding_matrix=None, **kwargs) -> Tensor:
         # [B, T]
-        _, embedding_weights = self.z(**kwargs)
+        token_masks, token_embeddings = self.z(**kwargs)
 
-        p = self.predictor(embedding_weights)
+        p = self.predictor(
+            token_masks,
+            token_embeddings,
+            embedding_matrix
+        )
 
         return p
