@@ -123,8 +123,8 @@ def main(argv):
 
     aspect = args.aspect
 
-    input_path_train = "/content/imle-annotator/data/BeerAdvocate/reviews.aspect" + str(aspect) + ".train.txt"
-    input_path_validation = "/content/imle-annotator/data/BeerAdvocate/reviews.aspect" + str(aspect) + ".heldout.txt"
+    input_path_train = "data/BeerAdvocate/reviews.aspect" + str(aspect) + ".train.txt"
+    input_path_validation = "data/BeerAdvocate/reviews.aspect" + str(aspect) + ".heldout.txt"
 
     # the dictionary mapping words to their IDs
     word_to_id = dict()
@@ -200,7 +200,7 @@ def main(argv):
 
     # this cell loads the word embeddings from the external data
     embeddings_index = {}
-    with open("/content/gdrive/MyDrive/review+wiki.filtered.200.txt") as f:
+    with open("data/BeerAdvocate/review+wiki.filtered.200.txt") as f:
         for line in f:
             values = line.split()
             word = values[0]
@@ -229,10 +229,10 @@ def main(argv):
 
     # here we can now iterate a few times to compute statistics
     for seed in range(args.reruns):
-        wandb.init(project="beeradv-l2x", name=f'{method_name}-{seed}')
+        # wandbb.init(project="beeradv-l2x", name=f'{method_name}-{seed}')
 
-        wandb.config.update(args)
-        wandb.config.update({'hostname': hostname, 'seed': seed})
+        # wandbb.config.update(args)
+        # wandbb.config.update({'hostname': hostname, 'seed': seed})
 
         set_seed(seed, is_deterministic=True)
 
@@ -401,7 +401,7 @@ def main(argv):
                 torch.save({'model_state_dict': model.state_dict()}, checkpoint_path)
                 best_val_mse = val_mse
 
-            wandb.log({'seed': seed, 'val_mse': val_mse, 'test_mse': test_mse, 'loss_mean': loss_mean}, step=epoch_no)
+            # wandbb.log({'seed': seed, 'val_mse': val_mse, 'test_mse': test_mse, 'loss_mean': loss_mean}, step=epoch_no)
 
         duration = time.time() - st
         print(f'[{seed}] Training time is {duration} ms')
@@ -424,9 +424,9 @@ def main(argv):
         print(f"[{seed}] Subset precision: {subset_prec:.5f}")
         subset_precision_lst += [subset_prec]
 
-        wandb.log({'best_val_mse': val_mse, 'best_test_mse': test_mse, 'best_subset_prec': subset_prec})
+        # wandbb.log({'best_val_mse': val_mse, 'best_test_mse': test_mse, 'best_subset_prec': subset_prec})
 
-        wandb.finish()
+        # wandbb.finish()
 
     print(f'Final Subset Precision List: {np.mean(subset_precision_lst):.5f} ± {np.std(subset_precision_lst):.5f}')
     print(f'Final Validation MSE List: {np.mean(val_mse_lst):.5f} ± {np.std(val_mse_lst):.5f}')
