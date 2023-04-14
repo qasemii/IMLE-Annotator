@@ -113,7 +113,7 @@ for idx, label in enumerate(label_list):
 # Initializing the bert model
 # model_name_or_path = 'bert-base-uncased'
 # model_name_or_path = 'albert-base-v1'
-model_name_or_path = "prajjwal1/bert-tiny"
+model_name_or_path = "prajjwal1/bert-mini"
 
 
 config = AutoConfig.from_pretrained(
