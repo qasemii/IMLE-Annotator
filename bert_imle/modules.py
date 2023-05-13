@@ -83,7 +83,7 @@ class Model(torch.nn.Module):
 
         # FC Predictor
         self.predictor = Predictor(
-            embedding_dims=128,
+            embedding_dims=model_name_or_path.config.hidden_size,
             hidden_dims=hidden_dims,
             select_k=select_k)
 
