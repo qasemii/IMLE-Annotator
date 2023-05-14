@@ -13,9 +13,6 @@ import pickle
 
 import torch
 
-import nltk
-from nltk.tokenize import word_tokenize
-
 from torch import optim, Tensor
 from torch.utils.data import TensorDataset
 from torch.utils.data import DataLoader
@@ -29,13 +26,9 @@ from imle.target import TargetDistribution, AdaptiveTargetDistribution
 from imle.noise import BaseNoiseDistribution, SumOfGammaNoiseDistribution, GumbelNoiseDistribution
 from imle.solvers import mathias_select_k
 
-from sklearn.model_selection import train_test_split
-
-from l2x.torch.utils import set_seed, subset_precision_esnli
-from l2x.torch.modules import ClassificationModel, ConcreteDistribution, SampleSubset, IMLETopK
-from l2x.utils import pad_sequences
-
-from snippets.explore_data import get_data, nltk_word_tokenize
+from utils.torch.utils import set_seed, subset_precision_esnli
+from utils.torch.modules import ClassificationModel, ConcreteDistribution, SampleSubset, IMLETopK
+from utils.utils import pad_sequences
 
 from typing import Optional, Callable
 
