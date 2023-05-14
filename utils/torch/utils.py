@@ -39,7 +39,7 @@ def plot_stats(data, title='Plot'):
     plt.show()
 
 
-def subset_precision(model, aspect, id_to_word, word_to_id, select_k, device: torch.device, max_len: int = 350):
+def subset_precision_beer(model, aspect, id_to_word, word_to_id, select_k, device: torch.device, max_len: int = 350):
     data = []
     num_annotated_reviews = 0
     with open("data/BeerAdvocate/annotations.json") as fin:
@@ -110,7 +110,7 @@ def subset_precision(model, aspect, id_to_word, word_to_id, select_k, device: to
         # if we have more than select_k non-padding words selected, we allow it but count that in
         selected_word_counter = selected_word_counter + max(selected_nonpadding_word_counter, select_k)
 
-    with open("highlights.txt", "w") as f:
+    with open(f"beer_k_{select_k}_highlights.txt", "w") as f:
         f.write('\n\n'.join(highlights))
 
     return correct_selected_counter / selected_word_counter
@@ -196,7 +196,7 @@ def subset_precision_esnli(model, data, id_to_word, word_to_id, select_k, device
         # if we have more than select_k non-padding words selected, we allow it but count that in
         selected_word_counter = selected_word_counter + max(selected_nonpadding_word_counter, select_k)
 
-    with open("highlights.txt", "w") as f:
+    with open(f"esnli_k_{select_k}_highlights.txt", "w") as f:
         f.write('\n\n'.join(marked_highlights_list))
 
     # plot_stats(entailment_dist, 'Entailment')
