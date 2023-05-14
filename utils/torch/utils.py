@@ -10,18 +10,8 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 
 import torch
-from torch import nn, Tensor
-from torch.distributions.gamma import Gamma
 
-from torch.distributions import Uniform
-
-import math
-
-from l2x.utils import pad_sequences
-
-from snippets.explore_data import nltk_word_tokenize
-
-from typing import Optional, Tuple, Callable
+from utils.utils import pad_sequences
 
 import logging
 
@@ -52,7 +42,7 @@ def plot_stats(data, title='Plot'):
 def subset_precision(model, aspect, id_to_word, word_to_id, select_k, device: torch.device, max_len: int = 350):
     data = []
     num_annotated_reviews = 0
-    with open("/content/imle-annotator/data/BeerAdvocate/annotations.json") as fin:
+    with open("imle-annotator/data/BeerAdvocate/annotations.json") as fin:
         for line in fin:
             item = json.loads(line)
             data.append(item)
