@@ -269,7 +269,7 @@ completed_steps = 0
 starting_epoch = 0
 
 # Train
-print('Training Process ...')
+print('Training Process ...') 
 resume_from_checkpoint = None
 for epoch in range(starting_epoch, num_train_epochs):
     model.train()
@@ -282,7 +282,7 @@ for epoch in range(starting_epoch, num_train_epochs):
         loss = metric(outputs, scores)
         loss = loss / gradient_accumulation_steps
         loss.backward()
-        print(loss)
+        print(loss.item())
 
         if step % gradient_accumulation_steps == 0 or step == len(train_dataloader) - 1:
             optimizer.step()
@@ -307,7 +307,7 @@ for epoch in range(starting_epoch, num_train_epochs):
             references=scores,
         )
 
-    print(f"epoch {epoch}: {mse_metric.compute()}\n-----------------")
+    print(f"Epoch {epoch} Dev MSE: {mse_metric.compute().item()}\n-----------------")
 
 # #######################################################################
 # # Test
