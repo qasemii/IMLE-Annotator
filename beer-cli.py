@@ -24,7 +24,7 @@ from imle.solvers import mathias_select_k
 
 from sklearn.model_selection import train_test_split
 
-from utils.torch.utils import set_seed, subset_precision
+from utils.torch.utils import set_seed, subset_precision_beer
 from utils.torch.modules import ScoreModel, ConcreteDistribution, SampleSubset, IMLETopK
 from utils.utils import pad_sequences
 
@@ -418,8 +418,8 @@ def main(argv):
         print(f"[{seed}] Test MSE: {test_mse:.5f}")
         test_mse_lst += [test_mse]
 
-        subset_prec = subset_precision(model, aspect, id_to_word, word_to_id, select_k,
-                                       device=device, max_len=maxlen) * 100.0
+        subset_prec = subset_precision_beer(model, aspect, id_to_word, word_to_id, select_k,
+                                            device=device, max_len=maxlen) * 100.0
         print(f"[{seed}] Subset precision: {subset_prec:.5f}")
         subset_precision_lst += [subset_prec]
 
