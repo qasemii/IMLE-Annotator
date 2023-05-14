@@ -24,8 +24,8 @@ from imle.solvers import mathias_select_k
 
 from sklearn.model_selection import train_test_split
 
-from utils.torch.utils import set_seed, subset_precision_beer
-from utils.torch.modules import ScoreModel, ConcreteDistribution, SampleSubset, IMLETopK
+from utils.utils import set_seed, subset_precision_beer
+from utils.modules import ScoreModel, ConcreteDistribution, SampleSubset, IMLETopK
 from utils.utils import pad_sequences
 
 from typing import Optional, Callable

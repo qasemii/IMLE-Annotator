@@ -26,8 +26,8 @@ from imle.target import TargetDistribution, AdaptiveTargetDistribution
 from imle.noise import BaseNoiseDistribution, SumOfGammaNoiseDistribution, GumbelNoiseDistribution
 from imle.solvers import mathias_select_k
 
-from utils.torch.utils import set_seed, subset_precision_esnli
-from utils.torch.modules import ClassificationModel, ConcreteDistribution, SampleSubset, IMLETopK
+from utils.utils import set_seed, subset_precision_esnli
+from utils.modules import ClassificationModel, ConcreteDistribution, SampleSubset, IMLETopK
 from utils.utils import pad_sequences
 
 from typing import Optional, Callable

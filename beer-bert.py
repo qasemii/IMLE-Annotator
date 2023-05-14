@@ -20,10 +20,10 @@ from transformers import (
 from typing import Optional, Tuple, Callable
 
 from imle.imle import imle
-from bert_imle.modules import DifferentiableSelectKModel, Model
-from bert_imle.solvers import mathias_select_k
-from bert_imle.target import TargetDistribution
-from bert_imle.noise import SumOfGammaNoiseDistribution
+from utils.modules import Model
+from imle.solvers import mathias_select_k
+from imle.target import TargetDistribution
+from imle.noise import SumOfGammaNoiseDistribution
 
 device = "cuda" if torch.cuda.is_available() else "cpu"
 
@@ -190,7 +190,7 @@ def imle_select_k(logits: Tensor) -> Tensor:
     return mathias_select_k(logits, select_k=select_k)
 
 
-select_k_model = DifferentiableSelectKModel(imle_select_k, blackbox_function)
+select_k_model = imle_select_k
 
 # Initializing model
 model = Model(
