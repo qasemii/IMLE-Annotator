@@ -168,7 +168,7 @@ eval_dataloader = DataLoader(eval_dataset, collate_fn=data_collator, batch_size=
 # Model
 
 # initializing differentiable select_k model
-blackbox_function = lambda logits: mathias_select_k(logits, select_k=select_k)
+blackbox_function = lambda logits: mathias_select_k(logits, k=select_k)
 
 nb_samples = 1
 imle_input_temp = 0.0
@@ -177,7 +177,7 @@ imle_lambda = 1000.0
 gradient_scaling = False
 
 target_distribution = TargetDistribution(alpha=1.0, beta=imle_lambda, do_gradient_scaling=gradient_scaling)
-noise_distribution = SumOfGammaNoiseDistribution(select_k=select_k, nb_iterations=10, device=device)
+noise_distribution = SumOfGammaNoiseDistribution(k=select_k, nb_iterations=10, device=device)
 
 
 @imle(
@@ -187,7 +187,7 @@ noise_distribution = SumOfGammaNoiseDistribution(select_k=select_k, nb_iteration
     theta_noise_temperature=imle_input_temp,
     target_noise_temperature=imle_output_temp)
 def imle_select_k(logits: Tensor) -> Tensor:
-    return mathias_select_k(logits, select_k=select_k)
+    return mathias_select_k(logits, k=select_k)
 
 
 select_k_model = imle_select_k
