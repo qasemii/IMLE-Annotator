@@ -475,9 +475,7 @@ def main(argv):
                 optimizer.zero_grad()
 
             loss_mean, loss_std = np.mean(epoch_loss_values), np.std(epoch_loss_values)
-            # highlights_loss_mean, highlights_loss_std = np.mean(epoch_highlights_loss), np.std(epoch_highlights_loss)
             logger.info(f'Epoch {epoch_no}/{epochs}\tLoss {loss_mean:.4f} ± {loss_std:.4f}')
-            # '\tHighlight Loss: {highlights_loss_mean: .4f} ± {highlights_loss_std: .4f}'
 
             # Checkpointing
             val_loss, val_accuracy = evaluate(model, X_val, y_val, device=device)
