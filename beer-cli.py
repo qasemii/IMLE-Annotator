@@ -31,6 +31,7 @@ from utils.utils import pad_sequences
 from typing import Optional, Callable
 
 import socket
+import wandb
 
 import logging
 
@@ -228,10 +229,10 @@ def main(argv):
 
     # here we can now iterate a few times to compute statistics
     for seed in range(args.reruns):
-        # wandbb.init(project="beeradv-l2x", name=f'{method_name}-{seed}')
+        wandb.init(project="beeradv-l2x", name=f'{method_name}-{seed}')
 
-        # wandbb.config.update(args)
-        # wandbb.config.update({'hostname': hostname, 'seed': seed})
+        wandb.config.update(args)
+        wandb.config.update({'hostname': hostname, 'seed': seed})
 
         set_seed(seed, is_deterministic=True)
 
@@ -400,7 +401,7 @@ def main(argv):
                 torch.save({'model_state_dict': model.state_dict()}, checkpoint_path)
                 best_val_mse = val_mse
 
-            # wandbb.log({'seed': seed, 'val_mse': val_mse, 'test_mse': test_mse, 'loss_mean': loss_mean}, step=epoch_no)
+            wandb.log({'seed': seed, 'val_mse': val_mse, 'test_mse': test_mse, 'loss_mean': loss_mean}, step=epoch_no)
 
         duration = time.time() - st
         print(f'[{seed}] Training time is {duration} ms')
@@ -423,9 +424,9 @@ def main(argv):
         print(f"[{seed}] Subset precision: {subset_prec:.5f}")
         subset_precision_lst += [subset_prec]
 
-        # wandbb.log({'best_val_mse': val_mse, 'best_test_mse': test_mse, 'best_subset_prec': subset_prec})
+        wandb.log({'best_val_mse': val_mse, 'best_test_mse': test_mse, 'best_subset_prec': subset_prec})
 
-        # wandbb.finish()
+        wandb.finish()
 
     print(f'Final Subset Precision List: {np.mean(subset_precision_lst):.5f} ± {np.std(subset_precision_lst):.5f}')
     print(f'Final Validation MSE List: {np.mean(val_mse_lst):.5f} ± {np.std(val_mse_lst):.5f}')
