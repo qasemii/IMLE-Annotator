@@ -376,7 +376,7 @@ def main(argv):
                     references=scores,
                 )
 
-            val_mse = mse_metric.compute().item()
+            val_mse = mse_metric.compute()['mse']
             if best_val_mse is None or val_mse <= best_val_mse:
                 print(f'Saving new checkpoint -- new best validation MSE: {val_mse:.5f}')
                 torch.save({'model_state_dict': model.state_dict()}, checkpoint_path)
@@ -399,7 +399,7 @@ def main(argv):
                 predictions=outputs,
                 references=scores,
             )
-        val_mse = mse_metric.compute().item()
+        val_mse = mse_metric.compute()['mse']
         print(f"[{seed}] Validation MSE: {val_mse:.5f}")
         val_mse_lst += [val_mse]
 
@@ -415,7 +415,7 @@ def main(argv):
                 predictions=outputs,
                 references=scores,
             )
-        test_mse = mse_metric.compute().item()
+        test_mse = mse_metric.compute()['mse']
         print(f"[{seed}] Test MSE: {test_mse:.5f}")
         test_mse_lst += [test_mse]
 
