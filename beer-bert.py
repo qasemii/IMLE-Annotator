@@ -100,8 +100,8 @@ def main(argv):
     checkpoint_path = args.checkpoint
 
     # data loading
-    # input_path_train = "data/BeerAdvocate/reviews.aspect" + str(aspect) + ".train.txt"
-    # input_path_validation = "data/BeerAdvocate/reviews.aspect" + str(aspect) + ".heldout.txt"
+    input_path_train = "data/BeerAdvocate/reviews.aspect" + str(aspect) + ".train.txt"
+    input_path_validation = "data/BeerAdvocate/reviews.aspect" + str(aspect) + ".heldout.txt"
 
     # Preparing train data
     train_data = {'tokens': [], 'labels': []}
