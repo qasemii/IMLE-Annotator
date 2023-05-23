@@ -29,6 +29,7 @@ from typing import Optional, Tuple, Callable
 
 from imle.imle import imle
 from utils.modules import Model
+from utils.utils import set_seed, subset_precision_beer
 from imle.solvers import mathias_select_k
 from imle.target import TargetDistribution
 from imle.noise import SumOfGammaNoiseDistribution
@@ -75,7 +76,7 @@ def main(argv):
     parser.add_argument('--max-iterations', action='store', type=int, default=None)
     parser.add_argument('--gradient-scaling', action='store_true', default=False)
 
-    parser.add_argument('--model_name_or_path', "-B", action='store', default='prajjwal1/bert-mini')
+    parser.add_argument('--model-name-or-path', "-B", action='store', default='prajjwal1/bert-mini')
 
     args = parser.parse_args(argv)
 
@@ -102,59 +103,59 @@ def main(argv):
     # input_path_train = "data/BeerAdvocate/reviews.aspect" + str(aspect) + ".train.txt"
     # input_path_validation = "data/BeerAdvocate/reviews.aspect" + str(aspect) + ".heldout.txt"
 
-    # # Preparing train data
-    # train_data = {'tokens': [], 'labels': []}
-    # with open(input_path_train) as fin:
-    #     for line in fin:
-    #         y, sep, text = line.partition("\t")
-    #         tokens = text.split(" ")
-    #         train_data['tokens'].append(tokens)
-    #         labels = [float(v) for v in y.split()]
-    #         train_data['labels'].append(labels[aspect])
-    #
-    # # Preparing train data
-    # validation_data = {'tokens': [], 'labels': []}
-    # with open(input_path_validation) as fin:
-    #     for line in fin:
-    #         y, sep, text = line.partition("\t")
-    #         tokens = text.split(" ")
-    #         validation_data['tokens'].append(tokens)
-    #         labels = [float(v) for v in y.split()]
-    #         validation_data['labels'].append(labels[aspect])
-    #
-    #
-    # # Prepare data as Dataset object
-    # train_dataset = Dataset.from_dict(train_data)
-    # validation_dataset = Dataset.from_dict(validation_data)
-    # test_valid_dataset = validation_dataset.train_test_split(test_size=0.5)
-    #
-    # # Creating Dataset object
-    # dataset = DatasetDict({
-    #     'train': train_dataset,
-    #     'validation': test_valid_dataset['train'],
-    #     'test': test_valid_dataset['test']})
-
-    data = {'tokens': [],
-            'labels': []}
-
-    with open("data/BeerAdvocate/annotations.json") as fin:
+    # Preparing train data
+    train_data = {'tokens': [], 'labels': []}
+    with open(input_path_train) as fin:
         for line in fin:
-            sample = json.loads(line)
-            data['tokens'].append(sample['x'])
-            data['labels'].append(sample['y'][aspect])
+            y, sep, text = line.partition("\t")
+            tokens = text.split(" ")
+            train_data['tokens'].append(tokens)
+            labels = [float(v) for v in y.split()]
+            train_data['labels'].append(labels[aspect])
 
-    # Whole data as a dataset object
-    raw_dataset = Dataset.from_dict(data)
+    # Preparing train data
+    validation_data = {'tokens': [], 'labels': []}
+    with open(input_path_validation) as fin:
+        for line in fin:
+            y, sep, text = line.partition("\t")
+            tokens = text.split(" ")
+            validation_data['tokens'].append(tokens)
+            labels = [float(v) for v in y.split()]
+            validation_data['labels'].append(labels[aspect])
 
-    # 90% train, 10% (test + validation)
-    train_test_valid = raw_dataset.train_test_split(test_size=0.1)
-    test_valid = train_test_valid['test'].train_test_split(test_size=0.5)
 
-    # Generating divided dataset dictionary
+    # Prepare data as Dataset object
+    train_dataset = Dataset.from_dict(train_data)
+    validation_dataset = Dataset.from_dict(validation_data)
+    test_valid_dataset = validation_dataset.train_test_split(test_size=0.5)
+
+    # Creating Dataset object
     dataset = DatasetDict({
-        'train': train_test_valid['train'],
-        'validation': test_valid['train'],
-        'test': test_valid['test']})
+        'train': train_dataset,
+        'validation': test_valid_dataset['train'],
+        'test': test_valid_dataset['test']})
+
+    # data = {'tokens': [],
+    #         'labels': []}
+    #
+    # with open("data/BeerAdvocate/annotations.json") as fin:
+    #     for line in fin:
+    #         sample = json.loads(line)
+    #         data['tokens'].append(sample['x'])
+    #         data['labels'].append(sample['y'][aspect])
+    #
+    # # Whole data as a dataset object
+    # raw_dataset = Dataset.from_dict(data)
+    #
+    # # 90% train, 10% (test + validation)
+    # train_test_valid = raw_dataset.train_test_split(test_size=0.1)
+    # test_valid = train_test_valid['test'].train_test_split(test_size=0.5)
+    #
+    # # Generating divided dataset dictionary
+    # dataset = DatasetDict({
+    #     'train': train_test_valid['train'],
+    #     'validation': test_valid['train'],
+    #     'test': test_valid['test']})
 
     label_list = ['O', 'B-SELECTED', 'I-SELECTED']
     num_labels = len(label_list)
@@ -173,7 +174,8 @@ def main(argv):
     # Initializing the bert model
     # model_name_or_path = 'bert-base-uncased'
     # model_name_or_path = 'albert-base-v1'
-    model_name_or_path = "prajjwal1/bert-mini"
+    # model_name_or_path = "prajjwal1/bert-mini"
+    model_name_or_path = args.model_name_or_path
 
     config = AutoConfig.from_pretrained(
         model_name_or_path,
@@ -211,6 +213,7 @@ def main(argv):
 
     train_dataset = processed_raw_datasets["train"]
     eval_dataset = processed_raw_datasets["validation"]
+    test_dataset = processed_raw_datasets["test"]
 
     # Data collator
     use_fp16 = False
@@ -218,7 +221,8 @@ def main(argv):
 
     # Data Loader
     train_dataloader = DataLoader(train_dataset, shuffle=True, collate_fn=data_collator, batch_size=batch_size)
-    eval_dataloader = DataLoader(eval_dataset, collate_fn=data_collator, batch_size=batch_size)
+    eval_dataloader = DataLoader(eval_dataset, shuffle=True, collate_fn=data_collator, batch_size=batch_size)
+    test_dataloader = DataLoader(test_dataset, shuffle=True, collate_fn=data_collator, batch_size=batch_size)
 
     # #######################################################################
     # Model
@@ -228,6 +232,7 @@ def main(argv):
     subset_precision_lst = []
 
     for seed in range(args.reruns):
+        set_seed(seed, is_deterministic=True)
 
         nb_samples = args.imle_samples
         imle_input_temp = args.imle_input_temperature
@@ -347,7 +352,7 @@ def main(argv):
                 loss = metric(outputs, scores)
                 loss = loss / gradient_accumulation_steps
                 loss.backward()
-                print(f'Epoch {epoch}/{num_train_epochs}\tIteration {step + 1}\tLoss value: {loss.item():.4f}')
+                print(f'Epoch {epoch+1}/{num_train_epochs}\tIteration {step + 1}\tLoss value: {loss.item():.4f}')
 
                 epoch_loss_values += [loss.item()]
 
@@ -360,7 +365,7 @@ def main(argv):
                 if completed_steps >= max_train_steps:
                     break
             loss_mean, loss_std = np.mean(epoch_loss_values), np.std(epoch_loss_values)
-            print(f'Epoch {epoch}/{num_train_epochs}\tLoss {loss_mean:.4f} ± {loss_std:.4f}')
+            print(f'Epoch {epoch+1}/{num_train_epochs}\tLoss {loss_mean:.4f} ± {loss_std:.4f}')
 
             model.eval()
             samples_seen = 0
