@@ -404,7 +404,7 @@ def main(argv):
             wandb.log({'seed': seed, 'val_mse': val_mse, 'test_mse': test_mse, 'loss_mean': loss_mean}, step=epoch_no)
 
         duration = time.time() - st
-        print(f'[{seed}] Training time is {duration} ms')
+        print(f'Training time is {duration} ms')
 
         if os.path.isfile(checkpoint_path):
             print(f'Loading checkpoint at {checkpoint_path} ..')
