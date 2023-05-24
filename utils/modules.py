@@ -352,8 +352,8 @@ class ClassificationModel(torch.nn.Module):
                  select_k: int,
                  differentiable_select_k: Optional[Callable[[Tensor], Tensor]] = None):
         super().__init__()
-        self.gumbel_selector = BLSTMEncoder(embedding_weights=embedding_weights)
-        # self.gumbel_selector = GumbelSelector(embedding_weights=embedding_weights, kernel_size=kernel_size)
+        # self.gumbel_selector = BLSTMEncoder(embedding_weights=embedding_weights)
+        self.gumbel_selector = GumbelSelector(embedding_weights=embedding_weights, kernel_size=kernel_size)
         # self.prediction_model = BLSTMDecoder()
         self.prediction_model = MulticlassPredictionModel(embedding_weights=embedding_weights, n_classes=n_classes,
                                                           hidden_dims=hidden_dims, select_k=select_k)
