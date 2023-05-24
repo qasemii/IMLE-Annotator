@@ -409,9 +409,9 @@ def main(argv):
             print(f'\t{name}\t{pt.size()}\t{pt.numel()}')
             group_name_to_nparams[group_name] = group_name_to_nparams.get(group_name, 0) + pt.numel()
 
-        # print('Model modules:')
-        # for name, nparams in group_name_to_nparams.items():
-        #     print(f'\t{name}\t{nparams}')
+        print('Model modules:')
+        for name, nparams in group_name_to_nparams.items():
+            print(f'\t{name}\t{nparams}')
 
         train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
         optimizer = optim.Adam(model.parameters(), lr=0.001, eps=1e-7)
