@@ -18,3 +18,28 @@ So (Red,Purple) are machine reasoning and (Blue,Purple) are human reasoning.
 
 Note: highlights are note provided during the trainging and they are just used for testing model perfromance.
 
+## Run
+
+To train the baseline model on the BeerAdvocate use the following command:
+```bash
+python3 beer-cli.py \
+-a 0 -e 1 -b 40 -k 3 -H 250 -m 350 -K 10 -r 1 -M imle \
+--imle-samples 1 --imle-noise gumbel --imle-lambda 1000.0\
+--imle-input-temperature 1.0 --imle-output-temperature 1.0
+```
+
+To train the model on the e-SNLI use the following command:
+```bash
+python3 esnli-cli.py\
+-e 10 -b 256 -k 3 -H 250 -m 150 -K 3 -r 1 -M imle --highlight False\
+--imle-samples 1 --imle-noise gumbel --imle-lambda 1000.0\
+--imle-input-temperature 1.0 --imle-output-temperature 1.0
+```
+
+The following command can be used for to train the Bert-to-Bert model for BeerAdvocate dataset:
+```bash
+python3 beer-bert.py \
+-a 0 -e 10 -b 128 -m 350 -K 10 -r 1 -M imle -B prajjwal1/bert-mini\
+--imle-samples 1 --imle-noise gumbel --imle-lambda 1000.0\
+--imle-input-temperature 1.0 --imle-output-temperature 1.0
+```
