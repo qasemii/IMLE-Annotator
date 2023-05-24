@@ -14,4 +14,4 @@ pytest-xdist
 pytest-forked
 
 nltk~=3.7
-Pillow~=9.2.0
+Pillow~=9.2.0 
