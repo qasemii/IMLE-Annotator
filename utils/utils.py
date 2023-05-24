@@ -217,7 +217,7 @@ def subset_precision_esnli(model, data, id_to_word, word_to_id, select_k, device
     # plot_stats(entailment_dist, 'Entailment')
 
     stats = {'entailment': entailment_dist, 'neutral': neutral_dist, 'contradiction': contradiction_dist}
-    with open(f'esnli_statistics_K{x_val_selected}.pkl', 'wb') as file:
+    with open(f'esnli_statistics_K{select_k}.pkl', 'wb') as file:
         pickle.dump(stats, file)
 
     return correct_selected_counter / selected_word_counter
